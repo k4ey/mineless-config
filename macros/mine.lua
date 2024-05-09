@@ -6,12 +6,12 @@ local function asyncSleepClock(ms)
 	until os.clock() >= future
 end
 
-if not getSettings().luajava.allowPrivateAccess then
-	log("&c&B [MINELESS] &f&3&B| Doing some tweaks to java settings, please restart your game...")
-	getSettings().luajava = getSettings().luajava or {}
-	getSettings().luajava.allowPrivateAccess = true
-	getSettings().save()
-end
+-- if not getSettings().luajava.allowPrivateAccess then
+-- 	log("&c&B [MINELESS] &f&3&B| Doing some tweaks to java settings, please restart your game...")
+-- 	getSettings().luajava = getSettings().luajava or {}
+-- 	getSettings().luajava.allowPrivateAccess = true
+-- 	getSettings().save()
+-- end
 
 -- local mc = getMinecraft()
 -- local enumHand = luajava.bindClass("net.minecraft.util.EnumHand")

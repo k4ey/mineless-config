@@ -52,7 +52,7 @@ local function goBlockVertically(self, args)
 		if direction == "down" then
 			sneak(50)
 		else
-			key("SPACE", 50)
+			key("SPACE", 60)
 		end
 	end
 	asyncSleepClock(50)
