@@ -1,0 +1,44 @@
+return {
+
+AreaMacro.new(
+    { 50 , 122 , 36 }, { 50 , 122 , 36 },
+	{
+		['id'] = "08:32:38:1771",
+		['type'] = "once",
+		['defaultCallbacksNames'] = {
+			[1] = "queuePos",
+		},
+		['callbackArgs'] = {
+		},
+	}
+),
+
+AreaMacro.new(
+    { 48 , 122 , 34 }, { 48 , 122 , 34 },
+	{
+		['type'] = "toggleable",
+		['toggling'] = true,
+		['id'] = "10:54:41:8409",
+		['defaultCallbacksNames'] = {
+			[1] = "bpsCounter",
+		},
+		['callbackArgs'] = {
+		},
+	}
+),
+
+AreaMacro.new(
+    { 49 , 127 , 36 }, { 50 , 127 , 41 },
+	{
+		['raytraceable'] = true,
+		['id'] = "15:02:07:2060",
+		['defaultCallbacksNames'] = {
+			[1] = "mine",
+		},
+		['callbackArgs'] = {
+		},
+	}
+),
+
+
+}

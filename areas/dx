@@ -1,0 +1,17 @@
+return {
+
+AreaMacro.new(
+    { -31 , 54 , -115 }, { -29 , 54 , -107 },
+	{
+		['raytraceable'] = true,
+		['id'] = "16:33:32:4088",
+		['defaultCallbacksNames'] = {
+			[1] = "schematic",
+		},
+		['callbackArgs'] = {
+		},
+	}
+),
+
+
+}

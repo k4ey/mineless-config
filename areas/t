@@ -1,0 +1,17 @@
+return {
+
+AreaMacro.new(
+    { 18004 , 118 , 29116 }, { 18009 , 126 , 29137 },
+	{
+		['id'] = "18:05:10:8707",
+		['defaultCallbacksNames'] = {
+			[1] = "autoAlign",
+			[2] = "goForward",
+		},
+		['callbackArgs'] = {
+		},
+	}
+),
+
+
+}
