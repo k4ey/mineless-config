@@ -1,3 +1,4 @@
+local silent = ...
 MacroCreator.api.loadAreas("vertical.lua")
 local editManager = MacroCreator.api.getEditManager()
 local areaManager = MacroCreator.api.getAreaManager()

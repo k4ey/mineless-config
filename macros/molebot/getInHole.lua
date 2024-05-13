@@ -67,10 +67,9 @@ local function alignPath(_, args)
 
 	if hasAirInFront() then
 		forward(time)
-		jump(time)
+		asyncSleepClock(200)
 	elseif hasAirUnder() then
-		sneak(time)
-		jump(time)
+		asyncSleepClock(500)
 		forward(time)
 	elseif hasAirBehind() then
 		back(time)

@@ -1,5 +1,41 @@
 local delayEntropy = 150
 local delay = 100
+
+--- determines whether plugin should be ran based on condition
+-- currently does not work so ignore this
+local pluginRunnerArgs = {
+	pluginPath = "vertical.lua",
+	delay = 5000,
+	shouldRun = function(env)
+		---@type EditManager
+		local editManager = env.api.getEditManager()
+		local wall = editManager.wallCoords["+x"]
+		return editManager.wallCoords["+x"] and env.getBlockName(env.table.unpack(wall)) ~= "Bedrock"
+	end,
+}
+
+local forwarderArgsDown = {
+	alignHeightVerticalMine = {
+		direction = "down",
+	},
+	-- pluginRunner = pluginRunnerArgs,
+}
+local forwarderArgsUp = {
+	alignHeightVerticalMine = {
+		direction = "up",
+	},
+	-- pluginRunner = pluginRunnerArgs,
+}
+
+local forwarderCallbacks = {
+	"goLeft",
+	"alignHeightVerticalMine",
+	"mine",
+	"ensureFlying",
+	"moveToWall",
+	"bpsCounter",
+	-- "pluginRunner",
+}
 return {
 	AreaMacro.new({ 1000, 111, 1000 }, { 1010, 130, 1010 }, {
 		["id"] = "downer",
@@ -19,68 +55,23 @@ return {
 		["callbackArgs"] = {},
 	}),
 
-	AreaMacro.new({ 1000, 114, 1000 }, { 1000, 114, 1000 }, {
-		["type"] = "toggleable",
-		["toggling"] = true,
-		["id"] = "timeouter",
-		["defaultCallbacksNames"] = {
-			[1] = "measurer",
-			[2] = "advAlerts",
-			[3] = "bpsCounter",
-		},
-		["callbackArgs"] = {
-			["advAlerts"] = {
-				["resetCommand"] = "/derive",
-				["webhook"] = "https://discord.com/api/webhooks/1206951173735710740/hVNVREGW767dqlz3QsqIoV9MjCKiN-PAKNMNEOJNx01O13X4mDNUJhgQKoO_Hx1-gKoc",
-			},
-		},
-	}),
-
 	AreaMacro.new({ 1000, 100, 1000 }, { 1010, 110, 1010 }, {
 		["id"] = "forwarder",
-		["defaultCallbacksNames"] = {
-			"goLeft",
-			-- "sneak",
-			"ensureFlying",
-			"mine",
-			"moveToWall",
-			"bpsCounter",
-			"alignHeightVerticalMine",
-		},
-		["callbackArgs"] = {
-			alignHeightVerticalMine = {
-				direction = "down",
-			},
-		},
+		["defaultCallbacksNames"] = forwarderCallbacks,
+		["callbackArgs"] = forwarderArgsDown,
 	}),
 	AreaMacro.new({ 1000, 109, 1000 }, { 1010, 109, 1010 }, {
 		["id"] = "switcherDown",
 		["defaultCallbacksNames"] = {
-			-- "resetMine",
 			"areaEditor",
 		},
 		["callbackArgs"] = {
-			-- resetMine = {
-			-- 	resetMineCommand = "/derive",
-			-- },
 			areaEditor = {
 				callbacks = {
-					["forwarder"] = {
-						"goLeft",
-						"alignHeightVerticalMine",
-						-- "sneak",
-						"ensureFlying",
-						"mine",
-						"moveToWall",
-						"bpsCounter",
-					},
+					forwarder = forwarderCallbacks,
 				},
 				args = {
-					forwarder = {
-						alignHeightVerticalMine = {
-							direction = "down",
-						},
-					},
+					forwarder = forwarderArgsDown,
 				},
 			},
 		},
@@ -90,32 +81,15 @@ return {
 	AreaMacro.new({ 1000, 101, 1000 }, { 1010, 102, 1010 }, {
 		["id"] = "switcherUp",
 		["defaultCallbacksNames"] = {
-			-- "resetMine",
 			"areaEditor",
 		},
 		["callbackArgs"] = {
-			-- resetMine = {
-			-- 	resetMineCommand = "/derive",
-			-- },
 			areaEditor = {
 				callbacks = {
-					["forwarder"] = {
-						"goLeft",
-						-- "goUp",
-						"alignHeightVerticalMine",
-						"mine",
-						"ensureFlying",
-						"moveToWall",
-
-						"bpsCounter",
-					},
+					forwarder = forwarderCallbacks,
 				},
 				args = {
-					forwarder = {
-						alignHeightVerticalMine = {
-							direction = "up",
-						},
-					},
+					forwarder = forwarderArgsUp,
 				},
 			},
 		},

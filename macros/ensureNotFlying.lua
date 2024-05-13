@@ -8,7 +8,9 @@ end
 
 local playerDetails = playerDetails
 local function ensureFlying(self, args)
-	if playerDetails.isOnGround() == false then
+	local _, vel = playerDetails.getVelocity()
+	if playerDetails.isOnGround() == false and playerDetails.getFallDist() == 0 and vel == 0 then
+		log("sneakgin")
 		sneak(100)
 	end
 end
