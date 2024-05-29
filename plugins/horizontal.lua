@@ -1,4 +1,4 @@
-MacroCreator.api.loadAreas("areas.txt")
+MacroCreator.api.loadAreas("horizontal.lua")
 local editManager = MacroCreator.api.getEditManager()
 local areaManager = MacroCreator.api.getAreaManager()
 local areas = areaManager:getAllAreas()

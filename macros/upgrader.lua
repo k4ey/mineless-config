@@ -130,7 +130,6 @@ local function upgrader(self, args)
 	local timeout = args and args.timeout or 60000
 	local steps = args and args.steps or usteps
 	parseUpgrades(steps, delay, 2000)
-	-- runOnMC(setGameFocused)
 	asyncSleepClock(timeout)
 end
 return { cb = upgrader, options = { saveState = true } }
