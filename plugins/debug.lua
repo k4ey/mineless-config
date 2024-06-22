@@ -1,4 +1,4 @@
-MacroCreator.api.loadAreas("perftesting.lua")
+MacroCreator.api.loadAreas("pathfinder.lua")
 local editManager = MacroCreator.api.getEditManager()
 local areaManager = MacroCreator.api.getAreaManager()
 local areas = areaManager:getAllAreas()
@@ -6,7 +6,7 @@ local checkPosition = { getPlayerBlockPos() }
 local _, _, sizes = editManager:getSizeOfMine("Bedrock", checkPosition)
 local y = editManager:getHeightOfMine("Bedrock", checkPosition)
 local anchors = {
-	perfmanager = { x = true, z = true, y = true },
+	main = { x = true, z = true, y = true },
 }
 
 for id, areaMacro in pairs(areas) do

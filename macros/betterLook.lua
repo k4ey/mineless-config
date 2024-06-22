@@ -41,7 +41,8 @@ local directions = {
 ---@alias down 90
 ---@alias forward 0
 ---@alias fdown 81
----@alias pitches "up" | "down" | "forward" | "fdown"
+---@alias fsmalldown 58
+---@alias pitches "up" | "down" | "forward" | "fdown" | "fsmalldown"
 local pitches = {
 	---@type up
 	up = -90,
@@ -51,6 +52,9 @@ local pitches = {
 	forward = 0,
 	---@type fdown
 	fdown = 81,
+
+	---@type fsmalldown
+	fsmalldown = 58,
 }
 
 ---asynchronously looks towards y1,p1 for <time> 'ms
@@ -106,7 +110,7 @@ local function isGoodEnough(direction, desired)
 end
 
 ---@param self any
----@param args {yaw:(directions | number)?, pitch:number?, time:number?, timeout:number?, timeEntropy: number?, yawEntropy: number?, pitchEntropy:number?, delay:number?, delayEntropy:number?}
+---@param args {yaw:(directions | number)?, pitch:number?, time:number?, timeout:number?, timeEntropy: number?, yawEntropy: (number | {min: number, max:number})?, pitchEntropy:number?, delay:number?, delayEntropy:number?}
 local function betterLook(self, args)
 	local direction = args.yaw or args[1]
 	local pitch = args.pitch or args[2]
@@ -126,7 +130,12 @@ local function betterLook(self, args)
 	local curPitch = playerDetails.getPitch()
 
 	local newYaw = directions[direction] or type(direction) == "number" and direction or curYaw
-	newYaw = newYaw + math.random(-yawEntropy, yawEntropy)
+	if type(yawEntropy) == "table" then
+		newYaw = newYaw + math.random(yawEntropy.min, yawEntropy.max)
+	else
+		newYaw = newYaw + math.random(-yawEntropy, yawEntropy)
+	end
+
 	local newPitch = pitches[pitch] or type(pitch) == "number" and pitch or curPitch
 	newPitch = newPitch + math.random(-pitchEntropy, pitchEntropy)
 	if time then

@@ -37,14 +37,10 @@ local function areaBlocksNearPlayer(radius)
 	return true
 end
 
--- local function restoreFocus()
---     mc.field_71415_G = true -- mc.inGameHasFocus = true
--- end
-
 local function goBlockVertically(self, args)
 	rb.toggleVisibility(true)
 	local radius = args.radius or 2
-	local direction = args.direction or "down"
+	local direction = args.direction or "up"
 	if playerDetails.isOnGround() then
 		asyncSleepClock(5250)
 	end
@@ -52,7 +48,9 @@ local function goBlockVertically(self, args)
 		if direction == "down" then
 			sneak(50)
 		else
-			key("SPACE", 60)
+			asyncSleepClock(500)
+			key("SPACE", 100)
+			asyncSleepClock(200)
 		end
 	end
 	asyncSleepClock(50)
