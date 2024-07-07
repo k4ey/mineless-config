@@ -108,7 +108,7 @@ local function returnToPosition(bx, by, bz)
 	end
 
 	while getDistanceToBlock(bx + 0.5, bz + 0.5) > 0.5 do
-		log(getDistanceToBlock(bx + 0.5, bz + 0.5))
+		-- log(getDistanceToBlock(bx + 0.5, bz + 0.5))
 		lookAt(bx + 0.5, by + 0.5, bz + 0.5)
 		forward(10)
 		asyncSleepClock(10)
@@ -126,9 +126,16 @@ local function getToTop(self, args)
 	local bx, by, bz = getPlayerStandingBlockPos()
 	while true do
 		local x, y, z = getPlayerStandingBlockPos()
+
 		bx, by, bz = determineLastBlock(x, y, z, bx, by, bz)
 		if hasFallenOfABlock(x, y, z, bx, by, bz) then
-			returnToPosition(bx, by, bz)
+			while not playerDetails.isOnGround() do
+				coroutine.yield()
+			end
+			_G.MOLEBOT_G.pathfinderGoal = { bx, by, bz }
+			while _G.MOLEBOT_G.pathfinderGoal do
+				coroutine.yield()
+			end
 			asyncSleepClock(250)
 		end
 

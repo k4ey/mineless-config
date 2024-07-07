@@ -12,7 +12,7 @@ local anchors = {
 for id, areaMacro in pairs(areas) do
 	local transformed = editManager.transformArea(areaMacro.area, { 1000, 100, 1000 }, {
 		width = sizes["x+"] + sizes["x-"],
-		height = y.y,
+		height = y.y + 10,
 		depth = sizes["z+"] + sizes["z-"],
 		oldWidth = 10,
 		oldHeight = 10,

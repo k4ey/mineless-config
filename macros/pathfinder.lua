@@ -1,3 +1,18 @@
+local function asyncSleepClock(ms)
+	local now = os.clock()
+	local future = now + ms / 1000
+	repeat
+		coroutine.yield()
+	until os.clock() >= future
+end
+local function startFlying()
+	log("Flying")
+	asyncSleepClock(500)
+	key("SPACE", 100)
+	asyncSleepClock(250)
+	key("SPACE", 50)
+	asyncSleepClock(500)
+end
 local aStar = (function()
 	local PQ = {}
 
@@ -174,14 +189,6 @@ local rb = _G.libs.relativeBlocks
 
 rb.toggleVisibility(true)
 
-local function asyncSleepClock(ms)
-	local now = os.clock()
-	local future = now + ms / 1000
-	repeat
-		coroutine.yield()
-	until os.clock() >= future
-end
-
 ---disables the area until it gets reset
 ---@param timeout number?
 local function disable(timeout)
@@ -193,37 +200,67 @@ local function disable(timeout)
 	asyncSleepClock(timeout)
 end
 
--- 1 d
-local function dist(a, b)
-	return a - b
+local function canFitIn(x)
+	return math.abs(x % 1) <= 0.7 or math.abs(x % 1) >= 0.3
 end
+local function canFitInY(y)
+	log(math.abs(y % 1))
+	return
+end
+local lastJump = os.clock()
 
 --- goes to given node, assumes it is possible to get to it
 ---@param node { x: number, y: number, z: number }
 local function gotoNode(node)
-	lookAt(node.x + 0.5, node.y + 0.5, node.z + 0.5)
+	look(0, 0)
 	rb.sShow({
 		xray = true,
 		position = { node.x, node.y, node.z },
-		color = "red",
+		color = "pink",
 		opacity = 1,
 	})
-	while true do
-		local x, y, z = getPlayerBlockPos()
-		local vertDistance = dist(y, node.y)
-		local horDistance = dist(x, node.x) + dist(z, node.z)
-		if math.abs(horDistance) > 1 then
-			forward(50)
+	local epsilon = 0.5
+	local dist = 1 / 0
+	local fallDist = playerDetails.getFallDist()
+	while dist > epsilon + epsilon * 0.5 do
+		local x, y, z = getPlayerPos()
+		local nx, ny, nz = node.x + 0.5, node.y + 0.5, node.z + 0.5
+		local dx, dy, dz = nx - x, ny - y, nz - z
+		if (playerDetails.isOnGround() or fallDist > 0) and dy > 0.2 then
+			startFlying()
+			asyncSleepClock(1000)
 		end
-		if vertDistance > 1 then
-			jump(50)
-		elseif vertDistance < -1 then
-			sneak(50)
+		dist = math.sqrt(dx * dx + dy * dy + dz * dz)
+		-- log(dist)
+		log({ dx, dy, dz })
+		if dy >= epsilon then
+			local now = os.clock()
+			log(now - lastJump)
+			if now - lastJump > 0.2 or now - lastJump < 0.7 then
+				lastJump = os.clock()
+				log("jumping")
+				key("SPACE", 50)
+				asyncSleepClock(50)
+			end
+		elseif dy <= -epsilon or math.abs(y % 1) >= 0.2 then
+			sneak(10)
+			asyncSleepClock(10)
+		end
+
+		if dz > epsilon or not canFitIn(z) then
+			forward(10)
+			asyncSleepClock(50)
+		elseif dz < -epsilon or not canFitIn(z) then
+			back(10)
+			asyncSleepClock(50)
+		elseif dx > epsilon or not canFitIn(x) then
+			left(10)
+			asyncSleepClock(50)
+		elseif dx < -epsilon or not canFitIn(x) then
+			right(10)
+			asyncSleepClock(50)
 		end
 		coroutine.yield()
-		if vertDistance == 0 and horDistance == 0 then
-			return
-		end
 	end
 end
 local colortable = { "blue", "cyan" }
@@ -267,25 +304,28 @@ end
 local function pathfind(gx, gy, gz)
 	local goal = { x = gx, y = gy, z = gz }
 
-	-- rb.sShow({
-	-- 	xray = true,
-	-- 	position = { gx, gy, gz },
-	-- 	color = "red",
-	--
-	-- 	opacity = 1,
-	-- })
+	rb.sShow({
+		xray = true,
+		position = { gx, gy, gz },
+		color = "red",
+
+		opacity = 1,
+	})
 	local x, y, z = getPlayerBlockPos()
 	local start = { x = x, y = y, z = z }
 	local simpleAStar = aStar(expand)(cost)(heuristicGoal(goal))
 	local path = simpleAStar(createGoal(goal))(start) or {}
+	startFlying()
 	for i, node in ipairs(path) do
-		rb.sShow({
-			xray = true,
-			position = { node.x, node.y, node.z },
-			color = "green",
-			opacity = 1,
-		})
+		gotoNode(node)
+		-- rb.sShow({
+		-- 	xray = true,
+		-- 	position = { node.x, node.y, node.z },
+		-- 	color = "green",
+		-- 	opacity = 1,
+		-- })
 	end
+	_G.MOLEBOT_G.pathfinderGoal = nil
 end
 -- run("~/macros/bundled-main.lua")
 
@@ -293,10 +333,9 @@ local lx, ly, lz = 0, 0, 0
 ---@param self any
 ---@param args table
 local function pathfinder(self, args)
-	local x, y, z = getPlayerBlockPos()
-	local gx, gy, gz = x + 5, y + 100, z + 5
-	if x ~= lx or y ~= ly or z ~= lz or getBlockName(gx, gy, gz) ~= "Air" or getBlockName(gx, gy + 1, gz) ~= "Air" then
-		lx, ly, lz = x, y, z
+	local gx, gy, gz = table.unpack(_G.MOLEBOT_G.pathfinderGoal)
+	gy = gy + 1
+	if getBlockName(gx, gy, gz) ~= "Air" or getBlockName(gx, gy + 1, gz) ~= "Air" then
 		rb.sShow({
 			clear = true,
 		})
@@ -305,6 +344,6 @@ local function pathfinder(self, args)
 	local now = os.clock()
 	pathfind(gx, gy, gz)
 	log("Time taken: ", os.clock() - now)
-	asyncSleepClock(1000)
+	disable(1000)
 end
 return { cb = pathfinder, options = { saveState = true } }

@@ -3,12 +3,13 @@ return {
 		id = "main",
 		defaultCallbacksNames = {
 			"perfcheck",
+			"getToTop",
 			"pathfinder",
 		},
 		callbackArgs = {},
 		requirements = {
 			pathfinder = function()
-				return true
+				return _G.MOLEBOT_G.pathfinderGoal
 			end,
 		},
 		color = "black",
