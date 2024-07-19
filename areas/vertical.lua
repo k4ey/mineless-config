@@ -1,28 +1,43 @@
 local lookTime = 350
-local timeEntropy = 150
+local timeEntropy = 50
 local delayEntropy = 50
-local delay = 80
+local delay = 100
+local resetCommand = "/pmine reset"
 
 local expandMineArgs = {
   anchorArea = "forwarder",
-  plugin = "vertical.lua"
+  plugin = "vertical.lua",
+  executeCommands = { "/spawn", "/pmine go" },
+  commandsDelay = 2000
 }
-
-local forwarderArgsDown = {
-  alignHeightVerticalMine = {
-    direction = "down",
+local forwarderArgs = {
+  expandMine = expandMineArgs,
+  afkbypass = {
+    whiteList = { -- this is used by afkbypass ( the script that stops you when afk check happens!) you can add labels that are ignored so you can use upgrader for example
+      "Crafting", "Speed Upgrade", "Pickaxe Enchantments", "Token Greed Upgrade", "Gem Greed Upgrade"
+    }
   },
-  expandMine = expandMineArgs
+  -- upgrader = { -- if you want to have automatic upgrades uncommment this
+  --   steps = {
+  --     {
+  --       action = function()
+  --         local previousSlots = openInventory().getTotalSlots()
+  --         repeat
+  --           use()
+  --           _G.libs.asyncSleepClock(100)
+  --         until openInventory().getTotalSlots() ~= previousSlots
+  --       end,
+  --     },
+  --     { name = "Token Greed Enchant" },
+  --     { name = "Max Upgrade" },
+  --     {
+  --       action = function()
+  --         openInventory().close()
+  --       end,
+  --     },
+  --   }
+  -- }
 }
-
-local forwarderArgsUp = {
-  alignHeightVerticalMine = {
-    direction = "up",
-  },
-  expandMine = expandMineArgs
-}
-
-
 local forwarderCallbacks = {
   "goLeft",
   "alignHeightVerticalMine",
@@ -31,9 +46,22 @@ local forwarderCallbacks = {
   "moveToWall",
   "bpsCounter",
   -- "perfcheck",
-  "afkbypass", -- if you have this enabled, you **cannot** use upgrader!!!! it will stop whenever any gui is opened
+  "afkbypass",
+  -- "upgrader", -- if you want to use it, you have to specify whiteList for afkbypass!
   "expandMine",
 }
+
+local forwarderArgsDown = _G.libs.table_extend('keep', false, forwarderArgs, {
+  alignHeightVerticalMine = {
+    direction = "down",
+  },
+})
+local forwarderArgsUp = _G.libs.table_extend('keep', false, forwarderArgs, {
+  alignHeightVerticalMine = {
+    direction = "up",
+  },
+})
+
 return {
   referencePoint = { 1000, 100, 1000 },
   referenceDimensions = { 10, 10, 10, },
@@ -44,26 +72,50 @@ return {
     forwarder = { x = true, z = true, y = true },
     switcherDown = { x = true, z = true, h = true },
     switcherUp = { x = true, z = true, h = true, y = true },
-    northWest = { x = true, z = true, w = true, d = true, y = true },
-    northEast = { x = false, z = true, w = true, d = true, y = true },
-    southWest = { x = true, z = false, w = true, d = true, y = true },
-    southEast = { x = false, z = false, w = true, d = true, y = true },
+    northWest = { x = true, z = true, w = false, d = true, y = true },
+    northEast = { x = false, z = true, w = true, d = false, y = true },
+    southWest = { x = true, z = true, w = true, d = false, y = true },
+    southEast = { x = true, z = false, w = false, d = true, y = true },
   },
   areas = {
     AreaMacro.new({ 1000, 111, 1000 }, { 1010, 130, 1010 }, {
       id = "downer",
       color = "white",
       defaultCallbacksNames = {
-        "ensureNotFlying",
+        "gotoPosition",
+        "expandMine",
       },
-      callbackArgs = {},
+      callbackArgs = {
+        expandMine = expandMineArgs,
+        gotoPosition = {
+          positionCallback = function()
+            local areas = { "southWest", "southEast", "northWest", "northEast" }
+            local vec3 = _G.libs.vec3
+            local minDist = math.huge
+            local closestArea = nil
+            local area
+            local ppos = vec3(getPlayerBlockPos()):setY(0)
+            for i, areaId in ipairs(areas) do
+              area = assert(MacroCreator.api.getAreaManager():getAreaById(areaId), areaId .. " area not found")
+              local dist = ppos:distance(vec3(table.unpack(area.area:getCenter())))
+              if dist < minDist then
+                minDist = dist
+                closestArea = area
+              end
+            end
+            assert(closestArea, "No closest area found")
+            ---@cast area AreaMacro
+            return closestArea.area.maxX, closestArea.area.maxY, closestArea.area.maxZ
+          end
+        }
+      },
     }),
 
     AreaMacro.new({ 999, 111, 999 }, { 1011, 111, 1011 }, {
       id = "jumper",
       color = "cyan",
       defaultCallbacksNames = {
-        "getInHole",
+        -- "getInHole",
       },
       callbackArgs = {},
     }),
@@ -110,7 +162,7 @@ return {
       type = "once",
     }),
     -- --
-    AreaMacro.new({ 1009, 100, 1009 }, { 1009, 110, 1009 }, {
+    AreaMacro.new({ 1009, 100, 1009 }, { 1002, 110, 1009 }, {
       id = "southEast",
       defaultCallbacksNames = {
         "betterLook",
@@ -127,7 +179,7 @@ return {
       },
       color = "red",
     }),
-    AreaMacro.new({ 1001, 100, 1009 }, { 1001, 110, 1009 }, {
+    AreaMacro.new({ 1001, 100, 1009 }, { 1001, 110, 1002 }, {
       id = "southWest",
       defaultCallbacksNames = {
         "betterLook",
@@ -144,7 +196,7 @@ return {
       },
       color = "pink",
     }),
-    AreaMacro.new({ 1001, 100, 1001 }, { 1001, 110, 1001 }, {
+    AreaMacro.new({ 1001, 100, 1001 }, { 1008, 110, 1001 }, {
       id = "northWest",
       defaultCallbacksNames = {
         "betterLook",
@@ -161,12 +213,11 @@ return {
       },
       color = "blue",
     }),
-    AreaMacro.new({ 1009, 100, 1001 }, { 1009, 110, 1001 }, {
+    AreaMacro.new({ 1009, 100, 1001 }, { 1009, 110, 1008 }, {
       id = "northEast",
       defaultCallbacksNames = {
         "betterLook",
         "sayCommands", -- uncomment if you want to periodically say some commands
-        -- "upgrader",
       },
       callbackArgs = {
         betterLook = {
@@ -178,7 +229,7 @@ return {
           delayEntropy = delayEntropy,
         },
         sayCommands = {
-          commands = { "/pmine reset" },
+          commands = { resetCommand },
           interval = 60000,
         },
       },

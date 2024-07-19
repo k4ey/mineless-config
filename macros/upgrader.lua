@@ -10,21 +10,21 @@
 -- 	end)
 -- end
 local function asyncSleepClock(ms)
-	local now = os.clock()
-	local future = now + ms / 1000
-	repeat
-		coroutine.yield()
-	until os.clock() >= future
+  local now = os.clock()
+  local future = now + ms / 1000
+  repeat
+    coroutine.yield()
+  until os.clock() >= future
 end
 
 ---disables the area until it gets reset
 local function disable(timeout)
-	if not timeout then
-		while true do
-			coroutine.yield()
-		end
-	end
-	asyncSleepClock(timeout)
+  if not timeout then
+    while true do
+      coroutine.yield()
+    end
+  end
+  asyncSleepClock(timeout)
 end
 
 ---@alias UpgraderStep_IdName { id: string, name: string, slot: number, nowait:boolean? }
@@ -33,103 +33,112 @@ end
 
 ---@type UpgraderStep[]
 local usteps = {
-	{
-		action = function()
-			local previousSlots = openInventory().getTotalSlots()
-			repeat
-				use()
-				asyncSleepClock(100)
-			until openInventory().getTotalSlots() ~= previousSlots
-		end,
-	},
-	{ name = "Token Enchants" },
-	{ name = "Jackhammer" },
-	{ slot = 16 },
-	{
-		action = function()
-			openInventory().close()
-		end,
-	},
+  {
+    action = function()
+      local previousSlots = openInventory().getTotalSlots()
+      repeat
+        use()
+        asyncSleepClock(100)
+      until openInventory().getTotalSlots() ~= previousSlots
+    end,
+  },
+  { name = "Token Enchants" },
+  { name = "Jackhammer" },
+  { slot = 16 },
+  {
+    action = function()
+      openInventory().close()
+    end,
+  },
 }
 local inv = openInventory()
 
 ---@param i number
 ---@return {name: string, id: string}?
 local function getSlot(i)
-	if inv.getTotalSlots() <= i then
-		return nil
-	end
-	local item = inv.getSlot(i)
-	return item and { name = item.name:gsub("§.", ""), id = item.id } or nil
+  if inv.getTotalSlots() <= i then
+    return nil
+  end
+  local item = inv.getSlot(i)
+  return item and { name = item.name:gsub("§.", ""), id = item.id } or nil
 end
 
 ---@param itemName string?
 ---@param itemId string?
 ---@return number?
 local function getSlotWith(itemName, itemId)
-	assert(itemName or itemId, "provide something to look for!")
-	for i = 1, inv.getTotalSlots() - 1 do
-		local item = getSlot(i)
-		if item then
-			if itemName and itemId then
-				if item.name == itemName and item.id == itemId then
-					return i
-				end
-			elseif itemName then
-				if item.name == itemName then
-					return i
-				end
-			elseif item.id == itemId then
-				return i
-			end
-		end
-	end
+  assert(itemName or itemId, "provide something to look for!")
+  for i = 1, inv.getTotalSlots() - 1 do
+    local item = getSlot(i)
+    if item then
+      if itemName and itemId then
+        if item.name == itemName and item.id == itemId then
+          return i
+        end
+      elseif itemName then
+        if item.name == itemName then
+          return i
+        end
+      elseif item.id == itemId then
+        return i
+      end
+    end
+  end
 end
 
 ---@param slot number
 local function clickAsync(slot)
-	inv.click(slot)
-	log("clicking slot " .. slot)
+  inv.click(slot)
+  log("clicking slot " .. slot)
+end
+
+local function wait(duration, blocking)
+  if blocking then
+    sleep(duration)
+  else
+    asyncSleepClock(duration)
+  end
 end
 
 ---parses the upgrades
 ---@param steps UpgraderStep[]
 ---@param delay number MILISECONDS
 ---@param timeout number SECONDS
-local function parseUpgrades(steps, delay, timeout)
-	for _, step in pairs(steps) do
-		local beginTime = os.clock()
-		log(step)
-		if step.name or step.id then
-			repeat
-				local slot = getSlotWith(step.name, step.id)
-				if slot then
-					log("found slot " .. slot .. "for ", step)
-					clickAsync(slot)
-				end
-				asyncSleepClock(delay)
-				if os.clock() - beginTime > timeout / 1000 then
-					break
-				end
-			until slot or step.nowait
-		elseif step.action then
-			assert(type(step.action) == "function", "action is invalid!")
-			step.action()
-		elseif step.slot then
-			assert(type(step.slot) == "number" and step.slot < openInventory().getTotalSlots(), "slot is invalid!")
-			openInventory().click(step.slot)
-		end
-		asyncSleepClock(delay)
-	end
+local function parseUpgrades(steps, delay, timeout, blocking)
+  for _, step in pairs(steps) do
+    local beginTime = os.clock()
+    log(step)
+    if step.name or step.id then
+      repeat
+        local slot = getSlotWith(step.name, step.id)
+        if slot then
+          log("found slot " .. slot .. "for ", step)
+          clickAsync(slot)
+        end
+        wait(delay, blocking)
+        if os.clock() - beginTime > timeout / 1000 then
+          break
+        end
+      until slot or step.nowait
+    elseif step.action then
+      assert(type(step.action) == "function", "action is invalid!")
+      step.action()
+    elseif step.slot then
+      assert(type(step.slot) == "number" and step.slot < openInventory().getTotalSlots(), "slot is invalid!")
+      openInventory().click(step.slot)
+    end
+    wait(delay, blocking)
+  end
 end
 
 ---@param self any
----@param args { delay: number?, timeout: number?, steps: UpgraderStep[] }
+---@param args { delay: number?, timeout: number?, steps: UpgraderStep[], blocking: boolean? }
 local function upgrader(self, args)
-	local delay = args and args.delay or 500
-	local timeout = args and args.timeout or 60000
-	local steps = args and args.steps or usteps
-	parseUpgrades(steps, delay, 2000)
-	asyncSleepClock(timeout)
+  local delay = args and args.delay or 500
+  local timeout = args and args.timeout or 60000
+  local steps = args and args.steps or usteps
+  local blocking = args and args.blocking or false
+  parseUpgrades(steps, delay, 2000, blocking)
+  asyncSleepClock(timeout)
 end
 return { cb = upgrader, options = { saveState = true } }
