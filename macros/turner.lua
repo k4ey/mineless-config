@@ -119,13 +119,13 @@ local function blockInTicks(v, ticks)
   return p + dv
 end
 
-local function count(t)
+local function count(t, offset)
   local _, py = getPlayerPos()
   py = py - 1
   local counter = 0
   local flag = false
   for k, v in pairs(t) do
-    local x, z = math.floor(v[1]), math.floor(v[2])
+    local x, z = math.floor(v[1] + offset.x), math.floor(v[2] + offset.z)
     plot(x, z)
     if getBlockName(x, py, z) == "Air" or getBlockName(x, py, z) == "Bedrock" then
       if not flag then
@@ -141,11 +141,12 @@ local function count(t)
   return counter
 end
 
-local function plotInMovement(v)
+local function plotInMovement(v, offset, limit)
   local p = vec3(getPlayerPos())
-  local np = blockInTicks(v, 30)
+  offset = offset or vec3(0, 0, 0)
+  local np = blockInTicks(v, limit)
   local vectors = plotLine(p.x, p.z, np.x, np.z)
-  return count(vectors)
+  return count(vectors, offset)
 end
 
 
@@ -178,35 +179,63 @@ local function getBlockUnderPlayer()
   return getBlockName(x, y, z)
 end
 
+---asynchronously looks towards y1,p1 for <time> 'ms
+---@param y0 number yaw source
+---@param y1 number yaw dest
+---@param p0 number pitch source
+---@param p1 number pitch dest
+---@param time number time how long it should take.
+local function asyncLook(y0, y1, p0, p1, time)
+  local start = os.clock()
+  local future = start + time / 1000
+  local yaw, pitch
+  local i
+  local angle1 = quat.Euler(0, p0, y0)
+  local angle2 = quat.Euler(0, p1, y1)
+  repeat
+    ---@diagnostic disable-next-line
+    i = math.clamp(1 - (future - os.clock()) / (future - start), 0, 1)
+    local angle = quat.Lerp(angle1, angle2, i):ToEulerAngles()
+    -- so basically this is some weird shit, does not work on negatives but does work on this...
+    if angle.y > 90 then
+      angle.y = angle.y - 360
+    end
+    --- this also, we do ZYX or smth like that
+    yaw, pitch = angle.z, angle.y
+    look(yaw, pitch)
 
+    coroutine.yield()
+  until os.clock() >= future
+end
+
+
+
+
+-- looker.asyncLook(yaw, (math.ceil(yaw / 45) % 8 + 1) * 45, pitch, 50, 400)
 
 local function noiser(self, args)
-  local vright = getAccelerationVector(90)
-  local vforward = getAccelerationVector(0)
-  hud3D.clearAll()
-  local limit = 10
-  local rblocks = plotInMovement(vright)
-  local fblocks = plotInMovement(vforward)
-  if getBlockUnderPlayer() == "Air" then return end
-  if rblocks < limit then
-    local yaw = getRotation()
-    local pitch = 50
-    local toEdge = 10 - rblocks
-    local time = rblocks * 10
-    if getBlockUnderPlayer() == "Air" then return end
-    looker.asyncLook(yaw, yaw + toEdge * 2, pitch, pitch, time)
+  local step = args and args.step or 15
+  local leftReach = args and args.leftReach or 30
+  local forwardReach = args and args.forwardReach or 5
+  local time = args and args.time or 100
+  local segments = (360 / step)
+  local pitch = args and args.pitch or 50
+
+  local limit = args and args.limit or 20
+  local toEdge = plotInMovement(getAccelerationVector(95), nil, leftReach)
+  local toForwardEdgeEdge = plotInMovement(getAccelerationVector(0), nil, forwardReach)
+  if toEdge < limit then
+    local yaw, oldPitch = getRotation()
+    local newYaw = ((math.ceil(yaw / step) + 1) % segments) * step
+    asyncLook(yaw, newYaw, oldPitch, pitch, 100)
+  elseif toForwardEdgeEdge < 2 then
     back(50)
-    asyncSleepClock(rblocks)
-  end
-  if fblocks > 5 then
-    back(0)
+  elseif toForwardEdgeEdge > 10 then
     forward(50)
-  elseif fblocks < 2 then
-    forward(0)
-    back(50)
   end
 
-  -- right(-1)
-  asyncSleepClock(10)
+
+  coroutine.yield()
+  hud3D.clearAll()
 end
 return { cb = noiser, options = { saveState = false } }

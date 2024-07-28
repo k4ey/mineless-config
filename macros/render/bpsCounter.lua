@@ -10,6 +10,7 @@ local lastMinedBlockCount = 0
 MOLEBOT_G = MOLEBOT_G or {}
 MOLEBOT_G.minedBlocks = MOLEBOT_G.minedBlocks or 0
 MOLEBOT_G.blocksPer20Sec = 0
+MOLEBOT_G.blocksPerSec = 0
 local function numOfBlocksMined()
   local currentMinedBlockCount = MOLEBOT_G.minedBlocks
   local diff = currentMinedBlockCount - lastMinedBlockCount
@@ -21,12 +22,14 @@ end
 
 local function bpsCounter()
   MOLEBOT_G.blocksPer20Sec = 0
+  MOLEBOT_G.blocksPerSec = 0
   while true do
     MOLEBOT_G.blocksPer20Sec = 0
     for i = 1, 20 do
       asyncSleepClock(1000)
       local capped, uncapped = numOfBlocksMined()
       MOLEBOT_G.blocksPer20Sec = MOLEBOT_G.blocksPer20Sec + uncapped
+      MOLEBOT_G.blocksPerSec = uncapped
       MacroCreator.hud:updateBps(capped, uncapped)
     end
     MacroCreator.network.blocks(MOLEBOT_G.blocksPer20Sec)

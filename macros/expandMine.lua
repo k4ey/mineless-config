@@ -12,15 +12,28 @@ local function disable()
   end
 end
 
-local function getAnchors(anchorArea)
+local function inTable(t, s)
+  for _, v in pairs(t) do
+    if v == s then
+      return true
+    end
+  end
+  return false
+end
+
+
+local function getAnchors(anchorArea, anchorBlocks)
+  if type(anchorBlocks) == "string" then
+    anchorBlocks = { anchorBlocks }
+  end
   return {
-    getBlockName(anchorArea.area.minX, anchorArea.area.minY, anchorArea.area.minZ) == "Bedrock",
-    getBlockName(anchorArea.area.minX, anchorArea.area.minY, anchorArea.area.maxZ) == "Bedrock",
-    getBlockName(anchorArea.area.minX, anchorArea.area.maxY, anchorArea.area.minZ) == "Bedrock",
-    getBlockName(anchorArea.area.minX, anchorArea.area.maxY, anchorArea.area.maxZ) == "Bedrock",
-    getBlockName(anchorArea.area.maxX, anchorArea.area.minY, anchorArea.area.minZ) == "Bedrock",
-    getBlockName(anchorArea.area.maxX, anchorArea.area.minY, anchorArea.area.maxZ) == "Bedrock",
-    getBlockName(anchorArea.area.maxX, anchorArea.area.maxY, anchorArea.area.minZ) == "Bedrock",
+    inTable(anchorBlocks, getBlockName(anchorArea.area.minX, anchorArea.area.minY, anchorArea.area.minZ)),
+    inTable(anchorBlocks, getBlockName(anchorArea.area.minX, anchorArea.area.minY, anchorArea.area.maxZ)),
+    inTable(anchorBlocks, getBlockName(anchorArea.area.minX, anchorArea.area.maxY, anchorArea.area.minZ)),
+    inTable(anchorBlocks, getBlockName(anchorArea.area.minX, anchorArea.area.maxY, anchorArea.area.maxZ)),
+    inTable(anchorBlocks, getBlockName(anchorArea.area.maxX, anchorArea.area.minY, anchorArea.area.minZ)),
+    inTable(anchorBlocks, getBlockName(anchorArea.area.maxX, anchorArea.area.minY, anchorArea.area.maxZ)),
+    inTable(anchorBlocks, getBlockName(anchorArea.area.maxX, anchorArea.area.maxY, anchorArea.area.minZ))
   }
 end
 
@@ -32,13 +45,13 @@ local function some(t)
   end
 end
 
----@param args {anchorArea: string, fileName: string, executeCommands: string[], commadsDelay: number}
+---@param args {anchorArea: string, fileName: string, executeCommands: string[], commadsDelay: number, anchorBlock: string | string[]}
 local function expandMine(self, args)
   local anchorArea = assert(MacroCreator.api.getAreaManager():getAreaById(args.anchorArea), "could not find the area")
   local areaManager = MacroCreator.api.getAreaManager()
   local editManager = MacroCreator.api.getEditManager()
   -- log(getBlockName(anchorArea.area.maxX, anchorArea.area.maxY, anchorArea.area.maxZ))
-  if not some(getAnchors(anchorArea)) then
+  if not some(getAnchors(anchorArea, args and args.anchorBlock or "Bedrock")) then
     log("&cThe anchor area is not a solid block")
     MacroCreator.api.loadResizableArea(args.fileName or areaManager.areasFile, editManager.checkPosition, "Bedrock")
     for _, command in pairs(args.executeCommands or {}) do

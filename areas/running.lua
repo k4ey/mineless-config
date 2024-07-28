@@ -23,15 +23,22 @@ return {
         "goRight",
         "betterLook",
         "sayCommands",
-        "expandMine"
+        "expandMine",
       },
       ["callbackArgs"] = {
-        sayCommands = { commands = { "/mine reset" }, interval = 60000, delay = 60000 },
+        sayCommands = { commands = { "/mine reset", }, interval = 60000, delay = 60000 },
         expandMine = { anchorArea = "inside", fileName = "running.lua", executeCommands = { "/mine go" }, commandsDelay = 1000 },
         betterLook = {
           pitch = 50,
           time = 1000,
           timeout = 100
+        },
+        turner = {
+          -- step = 90,
+          -- time = 200,
+          -- forwardReach = 4,
+          -- limit = 7
+
         }
       },
       requirements = {
@@ -40,7 +47,7 @@ return {
           return y >= MacroCreator.editManager.wallCoords["-x"][2]
         end,
         turner = function()
-          return playerDetails.getPitch() == 50
+          return playerDetails.isOnGround() and playerDetails.getPitch() == 50
         end,
         betterLook = function()
           return playerDetails.getPitch() ~= 50

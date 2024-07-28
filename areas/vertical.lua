@@ -8,14 +8,14 @@ local expandMineArgs = {
   anchorArea = "forwarder",
   plugin = "vertical.lua",
   executeCommands = { "/spawn", "/pmine go" },
-  commandsDelay = 2000
+  commandsDelay = 5000
 }
 local forwarderArgs = {
   expandMine = expandMineArgs,
   afkbypass = {
-    whiteList = { -- this is used by afkbypass ( the script that stops you when afk check happens!) you can add labels that are ignored so you can use upgrader for example
-      "Crafting", "Speed Upgrade", "Pickaxe Enchantments", "Token Greed Upgrade", "Gem Greed Upgrade"
-    }
+    -- whiteList = { -- this is used by afkbypass ( the script that stops you when afk check happens!) you can add labels that are ignored so you can use upgrader for example
+    --   "Crafting", "Speed Upgrade", "Pickaxe Enchantments", "Token Greed Upgrade", "Gem Greed Upgrade"
+    -- }
   },
   -- upgrader = { -- if you want to have automatic upgrades uncommment this
   --   steps = {
@@ -229,8 +229,10 @@ return {
           delayEntropy = delayEntropy,
         },
         sayCommands = {
-          commands = { resetCommand },
-          interval = 60000,
+          commands = { "/sellall" },
+          interval = 5000,
+          delay = 2000,
+          entropy = 300
         },
       },
       color = "cyan",
