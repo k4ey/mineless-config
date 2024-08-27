@@ -4,6 +4,7 @@ return {
     defaultCallbacksNames = {
       "bpsCounter",
       "getToTop",
+      "afkbypass", -- if you have this enabled, you **cannot** use upgrader!!!! it will stop whenever any gui is opened
       --"perfcheck",
       --"upgrader" -- upgrades! uncomment to apply, look inside upgrader.lua for more info
     },

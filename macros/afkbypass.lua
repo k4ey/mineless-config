@@ -20,7 +20,7 @@ local function afk(self, args)
   local whiteListedLabels = args and args.whiteList
   if (not whiteListedLabels and openInventory().getTotalSlots() > 63) or (whiteListedLabels and not inTable(whiteListedLabels, openInventory().getUpperLabel())) then
     MacroCreator.api.toggleBot()
-    jump(0)
+    key("SPACE", 0)
     forward(0)
     left(0)
     right(0)

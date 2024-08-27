@@ -6,24 +6,26 @@ return {
       -- "reqCheck",
       -- "perfcheck",
       "bpsCounter",
-      "ensureNotFlying",
-      "mine",
-      "turner",
-      "autojump",
-      "goRight",
-      "sayCommands",
-      "expandMine"
+      "orbitter"
+      -- "betterRunner",
+      -- "ensureNotFlying",
+      -- "mine",
+      -- "turner",
+      -- "autojump",
+      -- "goRight",
+      -- "sayCommands",
+      -- "expandMine"
       -- "mine",
     },
     ["callbackArgs"] = {
-      sayCommands = { commands = { "/mine reset", "/mine go" }, interval = 60000, delay = 60000 },
-      expandMine = { anchorArea = "main", fileName = "perftesting.lua", executeCommands = { "/mine go" }, commandsDelay = 1000 }
+      -- sayCommands = { commands = { "/mine reset", "/mine go" }, interval = 60000, delay = 60000 },
+      -- expandMine = { anchorArea = "main", fileName = "perftesting.lua", executeCommands = { "/mine go" }, commandsDelay = 1000 }
     },
     requirements = {
-      ensureNotFlying = function()
-        local x, y, z = getPlayerPos()
-        return y >= MacroCreator.editManager.wallCoords["-x"][2]
-      end
+      -- ensureNotFlying = function()
+      --   local x, y, z = getPlayerPos()
+      --   return y >= MacroCreator.editManager.wallCoords["-x"][2]
+      -- end
     },
     color = "black",
   }),

@@ -24,6 +24,7 @@ return {
         "betterLook",
         "sayCommands",
         "expandMine",
+        "afkbypass", -- if you have this enabled, you **cannot** use upgrader!!!! it will stop whenever any gui is opened
       },
       ["callbackArgs"] = {
         sayCommands = { commands = { "/mine reset", }, interval = 60000, delay = 60000 },
