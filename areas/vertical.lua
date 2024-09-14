@@ -2,12 +2,22 @@ local lookTime = 350
 local timeEntropy = 50
 local delayEntropy = 50
 local delay = 100
-local resetCommand = "/pmine reset"
+-- commands that are periodically sent to the server
+local commands = { "/pmine reset" }
+-- delay between sending commands (in ms)
+local commandsInterval = 60000
+-- delay between consecutive commands (in ms)
+local commandsDelay = 3000
+
 
 local expandMineArgs = {
+  --- the area should be the size of mine, if the size of mine does not match the size of area the area resize will be triggered
   anchorArea = "forwarder",
+  --- which plugin should be used for expanding the mine
   plugin = "vertical.lua",
+  --- commands sent after the mine has expanded
   executeCommands = { "/spawn", "/pmine go" },
+  --- delay between sending commands (in ms)
   commandsDelay = 5000
 }
 local forwarderArgs = {
@@ -229,9 +239,9 @@ return {
           delayEntropy = delayEntropy,
         },
         sayCommands = {
-          commands = { "/sellall" },
-          interval = 5000,
-          delay = 2000,
+          commands = commands,
+          interval = commandsInterval,
+          delay = commandsDelay,
           entropy = 300
         },
       },
