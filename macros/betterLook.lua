@@ -110,7 +110,7 @@ local function isGoodEnough(direction, desired)
 end
 
 ---@param self any
----@param args {yaw:(directions | number)?, pitch:number?, time:number?, timeout:number?, timeEntropy: number?, yawEntropy: (number | {min: number, max:number})?, pitchEntropy:number?, delay:number?, delayEntropy:number?}
+---@param args {yaw:(directions | number)?, pitch:number?, time:number?, timeout:number?, timeEntropy: number?, yawEntropy: (number | {min: number, max:number} | {min: number, max:number, override: true})?, pitchEntropy:number?, delay:number?, delayEntropy:number?}
 local function betterLook(self, args)
   local direction = args.yaw or args[1]
   local pitch = args.pitch or args[2]
@@ -131,13 +131,17 @@ local function betterLook(self, args)
 
   local newYaw = directions[direction] or type(direction) == "number" and direction or curYaw
   if type(yawEntropy) == "table" then
-    newYaw = newYaw + math.random(yawEntropy.min, yawEntropy.max)
+    if yawEntropy.override then
+      newYaw = math.random(yawEntropy.min * 100, yawEntropy.max * 100) / 100
+    else
+      newYaw = newYaw + math.random(yawEntropy.min, yawEntropy.max)
+    end
   else
     newYaw = newYaw + math.random(-yawEntropy, yawEntropy)
   end
 
   local newPitch = pitches[pitch] or type(pitch) == "number" and pitch or curPitch
-  newPitch = newPitch + math.random(-pitchEntropy, pitchEntropy)
+  newPitch = newPitch + math.random(-pitchEntropy * 10, pitchEntropy * 10) / 10
   if time then
     time = time + math.random(-timeEntropy, timeEntropy)
   end

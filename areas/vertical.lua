@@ -1,14 +1,14 @@
-local lookTime = 350
+local lookTime = 400
 local timeEntropy = 50
-local delayEntropy = 50
-local delay = 100
+local delayEntropy = 10
+local delay = 50
 -- commands that are periodically sent to the server
-local commands = { "/pmine reset" }
+local commands = { --[[ "/pmine reset" ]] }
 -- delay between sending commands (in ms)
 local commandsInterval = 60000
 -- delay between consecutive commands (in ms)
 local commandsDelay = 3000
-
+local sendCommands = false
 
 local expandMineArgs = {
   --- the area should be the size of mine, if the size of mine does not match the size of area the area resize will be triggered
@@ -20,6 +20,31 @@ local expandMineArgs = {
   --- delay between sending commands (in ms)
   commandsDelay = 5000
 }
+local function lookArgs(yaw)
+  local yawTable = {
+    north = -180,
+    east = -90,
+    south = 0,
+    west = 90
+  }
+  local yawEntropies = {
+    [-180] = { min = 155, max = 180, override = true },
+    [-90] = { min = -115, max = -90, override = true },
+    [0] = { min = -25, max = 0, override = true },
+    [90] = { min = 70, max = 90, override = true }
+  }
+  local yawEnt = yawEntropies[yawTable[yaw]]
+  return {
+    time = lookTime,
+    yaw = yaw,
+    timeEntropy = timeEntropy,
+    pitch = "forward",
+    pitchEntropy = 2,
+    delay = delay,
+    delayEntropy = delayEntropy,
+    yawEntropy = yawEnt,
+  }
+end
 local forwarderArgs = {
   expandMine = expandMineArgs,
   afkbypass = {
@@ -53,12 +78,12 @@ local forwarderCallbacks = {
   "alignHeightVerticalMine",
   "mine",
   "ensureFlying",
-  "moveToWall",
+  -- "moveToWall",
   "bpsCounter",
   -- "perfcheck",
   "afkbypass",
   -- "upgrader", -- if you want to use it, you have to specify whiteList for afkbypass!
-  "expandMine",
+  -- "expandMine",
 }
 
 local forwarderArgsDown = _G.libs.table_extend('keep', false, forwarderArgs, {
@@ -71,6 +96,13 @@ local forwarderArgsUp = _G.libs.table_extend('keep', false, forwarderArgs, {
     direction = "up",
   },
 })
+
+local yawEntropies = {
+  [180] = { min = 135, max = 180 },
+  [-90] = { min = -135, max = -90 },
+  [0] = { min = -45, max = 0 },
+  [90] = { min = 45, max = 90 }
+}
 
 return {
   referencePoint = { 1000, 100, 1000 },
@@ -92,33 +124,34 @@ return {
       id = "downer",
       color = "white",
       defaultCallbacksNames = {
-        "gotoPosition",
-        "expandMine",
+        "goDown"
+        -- "gotoPosition",
+        -- "expandMine",
       },
-      callbackArgs = {
-        expandMine = expandMineArgs,
-        gotoPosition = {
-          positionCallback = function()
-            local areas = { "southWest", "southEast", "northWest", "northEast" }
-            local vec3 = _G.libs.vec3
-            local minDist = math.huge
-            local closestArea = nil
-            local area
-            local ppos = vec3(getPlayerBlockPos()):setY(0)
-            for i, areaId in ipairs(areas) do
-              area = assert(MacroCreator.api.getAreaManager():getAreaById(areaId), areaId .. " area not found")
-              local dist = ppos:distance(vec3(table.unpack(area.area:getCenter())))
-              if dist < minDist then
-                minDist = dist
-                closestArea = area
-              end
-            end
-            assert(closestArea, "No closest area found")
-            ---@cast area AreaMacro
-            return closestArea.area.maxX, closestArea.area.maxY, closestArea.area.maxZ
-          end
-        }
-      },
+      -- callbackArgs = {
+      --   expandMine = expandMineArgs,
+      --   gotoPosition = {
+      --     positionCallback = function()
+      --       local areas = { "southWest", "southEast", "northWest", "northEast" }
+      --       local vec3 = _G.libs.vec3
+      --       local minDist = math.huge
+      --       local closestArea = nil
+      --       local area
+      --       local ppos = vec3(getPlayerBlockPos()):setY(0)
+      --       for i, areaId in ipairs(areas) do
+      --         area = assert(MacroCreator.api.getAreaManager():getAreaById(areaId), areaId .. " area not found")
+      --         local dist = ppos:distance(vec3(table.unpack(area.area:getCenter())))
+      --         if dist < minDist then
+      --           minDist = dist
+      --           closestArea = area
+      --         end
+      --       end
+      --       assert(closestArea, "No closest area found")
+      --       ---@cast area AreaMacro
+      --       return closestArea.area.maxX, closestArea.area.maxY, closestArea.area.maxZ
+      --     end
+      --   }
+      -- },
     }),
 
     AreaMacro.new({ 999, 111, 999 }, { 1011, 111, 1011 }, {
@@ -178,14 +211,7 @@ return {
         "betterLook",
       },
       callbackArgs = {
-        betterLook = {
-          time = lookTime,
-          yaw = "north",
-          timeEntropy = timeEntropy,
-          pitch = "forward",
-          delay = delay,
-          delayEntropy = delayEntropy,
-        },
+        betterLook = lookArgs("north"),
       },
       color = "red",
     }),
@@ -195,14 +221,7 @@ return {
         "betterLook",
       },
       callbackArgs = {
-        betterLook = {
-          pitch = "forward",
-          timeEntropy = timeEntropy,
-          time = lookTime,
-          yaw = "east",
-          delay = delay,
-          delayEntropy = delayEntropy,
-        },
+        betterLook = lookArgs("east")
       },
       color = "pink",
     }),
@@ -212,14 +231,7 @@ return {
         "betterLook",
       },
       callbackArgs = {
-        betterLook = {
-          pitch = "forward",
-          timeEntropy = timeEntropy,
-          time = lookTime,
-          yaw = "south",
-          delay = delay,
-          delayEntropy = delayEntropy,
-        },
+        betterLook = lookArgs("south"),
       },
       color = "blue",
     }),
@@ -227,17 +239,10 @@ return {
       id = "northEast",
       defaultCallbacksNames = {
         "betterLook",
-        "sayCommands", -- uncomment if you want to periodically say some commands
+        sendCommands and "sayCommands" or nil, -- uncomment if you want to periodically say some commands
       },
       callbackArgs = {
-        betterLook = {
-          pitch = "forward",
-          time = lookTime,
-          timeEntropy = timeEntropy,
-          yaw = "west",
-          delay = delay,
-          delayEntropy = delayEntropy,
-        },
+        betterLook = lookArgs("west"),
         sayCommands = {
           commands = commands,
           interval = commandsInterval,
