@@ -5,8 +5,8 @@ return {
     ["defaultCallbacksNames"] = {
       -- "reqCheck",
       -- "perfcheck",
-      "bpsCounter",
-      "orbitter"
+      -- "bpsCounter",
+      -- "orbitter"
       -- "betterRunner",
       -- "ensureNotFlying",
       -- "mine",

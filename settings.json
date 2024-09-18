@@ -1,1 +1,1 @@
-{"toggleBot":"t","saveSettings":"s","prepareAreas":"p","showGui":"v","showAreas":"v","showSettings":"s", "telemetry":true}
+{"toggleBot":"t","telemetry":false,"prepareAreas":"p","saveSettings":"s","showGui":"v","showAreas":"v","showSettings":"s"}
