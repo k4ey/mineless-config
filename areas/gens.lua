@@ -8,8 +8,7 @@ return {
   areas = {
     AreaMacro.new({ 1000, 100, 1000 }, { 1010, 110, 1010 }, {
       id = "main",
-      type = "toggleable",
-      toggling = true,
+      type = "constant",
       color = "green",
       defaultCallbacksNames = {
         "rayTraceTurning",

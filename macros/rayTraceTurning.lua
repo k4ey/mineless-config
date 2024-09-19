@@ -23,17 +23,21 @@ end
 ---@type fun(x: number, y: number, z: number): string?
 ---@diagnostic disable-next-line
 getBlockName = getBlockName
-local whitelist = {
+_G.GensConfig = _G.GensConfig or {}
+_G.GensConfig.farmland = "Farmland"
+_G.GensConfig.crops = _G.GensConfig.crops or {
   ["Wheat Crops"] = true,
   ["Air"] = true
 }
+
+local crops = GensConfig.crops
 
 ---@param v vec3
 local function isCrop(v)
   local farmLand = getBlockName(v:unpack())
   local crop = getBlockName((v + vec3(0, 1, 0)):unpack())
-  if farmLand ~= "Farmland" then return -999 end
-  if not whitelist[crop] then return -999 end
+  if farmLand ~= GensConfig.farmland then return -999 end
+  if not crops[crop] then return -999 end
   return crop ~= "Air" and 1 or 0
 end
 
@@ -83,6 +87,7 @@ local function gensScript(self, args)
     local yaw, _ = looker.getRotationTo(goal + vec3(1, 0, 1))
     lastDirection = bestDirection
     lockYawFor(yaw, 300)
+    coroutine.yield()
 
     rb.sShow({ clear = true })
   end

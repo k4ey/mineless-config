@@ -1,1 +1,1 @@
-{"toggleBot":"t","telemetry":false,"prepareAreas":"p","saveSettings":"s","showGui":"v","showAreas":"v","showSettings":"s"}
+{"telemetry":false,"showAreas":"v","Mineless":{"commands":{"spawnCommand":"/spawn","resetMineCommand":"/pmine reset","sellAllCommand":"/sellall"}},"toggleBot":"t","GensConfig":{"crops":{"Air":true,"Wheat Crops":true},"farmland":"Farmland"},"saveSettings":"s","prepareAreas":"p","showGui":"v","showSettings":"s"}
