@@ -2,24 +2,7 @@ local lookTime = 400
 local timeEntropy = 50
 local delayEntropy = 10
 local delay = 50
--- commands that are periodically sent to the server
-local commands = { --[[ "/pmine reset" ]] }
--- delay between sending commands (in ms)
-local commandsInterval = 60000
--- delay between consecutive commands (in ms)
-local commandsDelay = 3000
-local sendCommands = false
 
-local expandMineArgs = {
-  --- the area should be the size of mine, if the size of mine does not match the size of area the area resize will be triggered
-  anchorArea = "forwarder",
-  --- which plugin should be used for expanding the mine
-  plugin = "vertical.lua",
-  --- commands sent after the mine has expanded
-  executeCommands = { "/spawn", "/pmine go" },
-  --- delay between sending commands (in ms)
-  commandsDelay = 5000
-}
 local function lookArgs(yaw)
   local yawTable = {
     north = -180,
@@ -46,7 +29,6 @@ local function lookArgs(yaw)
   }
 end
 local forwarderArgs = {
-  expandMine = expandMineArgs,
   afkbypass = {
     -- whiteList = { -- this is used by afkbypass ( the script that stops you when afk check happens!) you can add labels that are ignored so you can use upgrader for example
     --   "Crafting", "Speed Upgrade", "Pickaxe Enchantments", "Token Greed Upgrade", "Gem Greed Upgrade"
@@ -83,7 +65,6 @@ local forwarderCallbacks = {
   -- "perfcheck",
   "afkbypass",
   -- "upgrader", -- if you want to use it, you have to specify whiteList for afkbypass!
-  -- "expandMine",
 }
 
 local forwarderArgsDown = _G.libs.table_extend('keep', false, forwarderArgs, {
@@ -125,33 +106,7 @@ return {
       color = "white",
       defaultCallbacksNames = {
         "goDown"
-        -- "gotoPosition",
-        -- "expandMine",
       },
-      -- callbackArgs = {
-      --   expandMine = expandMineArgs,
-      --   gotoPosition = {
-      --     positionCallback = function()
-      --       local areas = { "southWest", "southEast", "northWest", "northEast" }
-      --       local vec3 = _G.libs.vec3
-      --       local minDist = math.huge
-      --       local closestArea = nil
-      --       local area
-      --       local ppos = vec3(getPlayerBlockPos()):setY(0)
-      --       for i, areaId in ipairs(areas) do
-      --         area = assert(MacroCreator.api.getAreaManager():getAreaById(areaId), areaId .. " area not found")
-      --         local dist = ppos:distance(vec3(table.unpack(area.area:getCenter())))
-      --         if dist < minDist then
-      --           minDist = dist
-      --           closestArea = area
-      --         end
-      --       end
-      --       assert(closestArea, "No closest area found")
-      --       ---@cast area AreaMacro
-      --       return closestArea.area.maxX, closestArea.area.maxY, closestArea.area.maxZ
-      --     end
-      --   }
-      -- },
     }),
 
     AreaMacro.new({ 999, 111, 999 }, { 1011, 111, 1011 }, {
@@ -239,15 +194,18 @@ return {
       id = "northEast",
       defaultCallbacksNames = {
         "betterLook",
-        sendCommands and "sayCommands" or nil, -- uncomment if you want to periodically say some commands
+        MacroCreator.api.getSettings("commandsEnabled") and "sayCommands" or nil
       },
       callbackArgs = {
         betterLook = lookArgs("west"),
         sayCommands = {
-          commands = commands,
-          interval = commandsInterval,
-          delay = commandsDelay,
-          entropy = 300
+          -- input the commands you want here
+          commands = MacroCreator.api.getSettings("commands") or {},
+          -- interval
+          interval = MacroCreator.api.getSettings("commandsInterval") or 1000,
+          -- delay between each command
+          delay = MacroCreator.api.getSettings("commandsDelay") or 10,
+          entropy = 300,
         },
       },
       color = "cyan",

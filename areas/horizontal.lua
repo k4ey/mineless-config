@@ -25,7 +25,7 @@ return {
       defaultCallbacksNames = {
         "goForward",
         "bpsCounter",
-        "sayCommands", -- uncomment if you want to periodically say some commands
+        MacroCreator.api.getSettings("commandsEnabled") and "sayCommands" or nil
       },
       callbackArgs = {
         goForward = {
@@ -33,11 +33,11 @@ return {
         },
         sayCommands = {
           -- input the commands you want here
-          commands = { "/pmine reset" },
+          commands = MacroCreator.api.getSettings("commands") or {},
           -- interval
-          interval = 10000,
+          interval = MacroCreator.api.getSettings("commandsInterval") or 10000,
           -- delay between each command
-          delay = 10,
+          delay = MacroCreator.api.getSettings("commandsDelay") or 10,
         },
       },
     }),

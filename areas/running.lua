@@ -22,12 +22,17 @@ return {
         "mine",
         "goRight",
         "betterLook",
-        "sayCommands",
         "expandMine",
         "afkbypass", -- if you have this enabled, you **cannot** use upgrader!!!! it will stop whenever any gui is opened
+        MacroCreator.api.getSettings("commandsEnabled") and "sayCommands" or nil
       },
       ["callbackArgs"] = {
-        sayCommands = { commands = { "/mine reset", }, interval = 60000, delay = 60000 },
+        sayCommands = {
+          commands = MacroCreator.api.getSettings("commands") or {},
+          interval = MacroCreator.api.getSettings("commandsInterval") or 60000,
+          delay = MacroCreator.api.getSettings("commandsDelay") or 60000,
+          entropy = 300,
+        },
         expandMine = { anchorArea = "inside", fileName = "running.lua", executeCommands = { "/mine go" }, commandsDelay = 1000 },
         betterLook = {
           pitch = 50,
