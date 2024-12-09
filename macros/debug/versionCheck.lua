@@ -8,7 +8,7 @@ local function splitByDot(str)
   return t
 end
 
-local MacrosVersion = { semantic = "1.2.0", release = "alpha" }
+local MacrosVersion = { semantic = "1.3.0", release = "alpha" }
 local Macrosv = splitByDot(MacrosVersion.semantic)
 local Minelessv = splitByDot(MacroCreator.version.semantic)
 
