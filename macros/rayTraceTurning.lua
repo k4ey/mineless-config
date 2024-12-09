@@ -62,7 +62,7 @@ local function lockYawFor(yaw, ms)
 end
 
 
-local function gensScript(self, args)
+local function gensScript()
   local lastDirection = 0
   ---@diagnostic disable
   ---@type Gens

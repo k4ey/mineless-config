@@ -1,8 +1,8 @@
-local overridedSize = MacroCreator.api.getSettings("overrideSize", "vertical")
-if type(overridedSize) == "table" then
-  MacroCreator.api.loadConstantSizeArea("vertical.lua", table.unpack(overridedSize))
-  return
-end
+-- local overridedSize = MacroCreator.api.getSettings("overrideSize", "vertical")
+-- if type(overridedSize) == "table" then
+--   MacroCreator.api.loadConstantSizeArea("vertical.lua", table.unpack(overridedSize))
+--   return
+-- end
 
 local ip = getWorld().ip
 if ip == "oplegends.net" then
