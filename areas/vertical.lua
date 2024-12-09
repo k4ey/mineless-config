@@ -5,13 +5,13 @@ local enableCommands, commands, commandsInterval, commandsDelay, commandsEntropy
 --[[
  CONFIG EXAMPLE PLEASE COPY AND PASTE WHOLE LINES! IF YOU HAVE PROBLEMS, PLEASE INPUT THIS TEXT INTO CHATGPT AND TRY FIGURING OUT WHAT IS WRONG WITH __HIM FIRST__ (ITS GONNA BE FASTER THAN ASKING ME!!!!)
 PROMPTS FOR CHATGPT:
-(change this line as needed) I WANT TO SEND COMMANDS EVERY 10 SECONDS AND I WANT TO HAVE SAFE MODE ENABLED I WANT THE COMMANDS TO BE: "/mine reset" "/sell all"
+(change this line as needed) I WANT TO SEND COMMANDS EVERY 200 SECONDS AND I WANT TO HAVE SAFE MODE ENABLED I WANT THE COMMANDS TO BE: "/mine reset" "/sell all"
 below is a example configuration of a LUA script. PROVIDE TEXT MATCHING PROMPT, DO NOT PROVIDE COMMENTS, USE VARIABLES DEFINED BY THE EXAMPLE, DO NOT INTRODUCE ANY NEW FIELDS
 
 local enableCommands = true -- true OR false TO ENABLE
 local commands = { "/command one", "/command two" } -- HAS TO START WITH "/" to be a command, enableCommands must be true for this to take effect (ITS A TABLE OF STRINGS)
-local commandsInterval = 10000 -- interval in ms (time between repeating commands)
-local commandsDelay = 10 -- delay between each command in ms (wait time between consequitive commands)
+local commandsInterval = 200000 -- interval in ms (time between repeating commands)
+local commandsDelay = 500 -- delay between each command in ms (wait time between consequitive commands)
 local commandsEntropy = 100 -- random time to add  to interval (in ms)
 
 local lookTime = 400 -- ms how long it takes to change the direction
@@ -24,17 +24,17 @@ END OF PROMPT FOR CHATGPT
 
 ]]
 -- >>>>PASTE YOUR CONFIG BELOW THIS LINE (WHEN PASTING MAKE SURE TO OVERWRITE LINES BELOW THIS COMMENT)<<<<
-local enableCommands = true                     -- true OR false TO ENABLE
-local commands = { "/mine reset", "/sell all" } -- HAS TO START WITH "/" to be a command, enableCommands must be true for this to take effect (ITS A TABLE OF STRINGS)
-local commandsInterval = 10000                  -- interval in ms (time between repeating commands)
-local commandsDelay = 10                        -- delay between each command in ms (wait time between consequitive commands)
-local commandsEntropy = 100                     -- random time to add to interval (in ms)
+local enableCommands = true        -- true OR false TO ENABLE
+local commands = { "/mine reset" } -- HAS TO START WITH "/" to be a command, enableCommands must be true for this to take effect (ITS A TABLE OF STRINGS)
+local commandsInterval = 200000    -- interval in ms (time between repeating commands)
+local commandsDelay = 500          -- delay between each command in ms (wait time between consequitive commands)
+local commandsEntropy = 100        -- random time to add to interval (in ms)
 
-local lookTime = 400                            -- ms how long it takes to change the direction
-local timeEntropy = 50                          -- random ms range added to lookTime
-local lookDelay = 50                            -- ms after which it starts turning after hitting a wall
-local delayEntropy = 10                         -- random ms added to lookDelay
-local safeMode = true                           -- true OR false TO ENABLE SAFE MODE (stops when any GUI is opened)
+local lookTime = 400               -- ms how long it takes to change the direction
+local timeEntropy = 50             -- random ms range added to lookTime
+local lookDelay = 50               -- ms after which it starts turning after hitting a wall
+local delayEntropy = 10            -- random ms added to lookDelay
+local safeMode = true              -- true OR false TO ENABLE SAFE MODE (stops when any GUI is opened)
 
 --BUT ABOVE THIS LINE!!!
 
