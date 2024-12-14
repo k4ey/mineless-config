@@ -1,7 +1,7 @@
 -- predefining default values
-local enableCommands, commands, commandsInterval, commandsDelay, commandsEntropy, pitch, safeMode, farmland, crops, range =
+local enableCommands, commands, commandsInterval, commandsDelay, commandsEntropy, pitch, safeMode, farmland, crops, range, stepSlow, stepQuick =
     false, {}, 0, 0, 0,
-    18, false, "Farmland", {}, 50
+    18, false, "Farmland", {}, 50, 0.1, 0.21
 --[[
  CONFIG EXAMPLE PLEASE COPY AND PASTE WHOLE LINES! IF YOU HAVE PROBLEMS, PLEASE INPUT THIS TEXT INTO CHATGPT AND TRY FIGURING OUT WHAT IS WRONG WITH __HIM FIRST__ (ITS GONNA BE FASTER THAN ASKING ME!!!!)
 PROMPTS FOR CHATGPT:
@@ -21,6 +21,8 @@ local crops = {
 }
 local farmland = "Farmland"
 local range = 50 -- range at which it should look for possible goals
+local stepQuick = 0.1 -- step used for interpolations on big angles (higher value more snappy)
+local stepSlow = 0.21 -- step used for interpolations on small angles (higher value more snappy)
 END OF PROMPT FOR CHATGPT
 ]]
 -- >>>>PASTE YOUR CONFIG BELOW THIS LINE (WHEN PASTING MAKE SURE TO OVERWRITE LINES BELOW THIS COMMENT)<<<<
@@ -31,8 +33,10 @@ local crops = {
   ["Wheat Crops"] = true,
 }
 local farmland = "Farmland"
-local pitch = 18  -- pitch to look at when farming
-local range = 100 -- range at which it should look for possible goals
+local pitch = 18      -- pitch to look at when farming
+local range = 100     -- range at which it should look for possible goals
+local stepQuick = 0.1 -- step used for interpolations on big angles (higher value more snappy)
+local stepSlow = 0.21 -- step used for interpolations on small angles (higher value more snappy)
 
 --BUT ABOVE THIS LINE!!!
 
@@ -59,7 +63,7 @@ return {
       },
       callbackArgs = {
         goForward = { sprint = true, time = -1 },
-        gens = { farmland = farmland, crops = crops, pitch = pitch, range = range },
+        gens = { farmland = farmland, crops = crops, pitch = pitch, range = range, stepQuick = stepQuick, stepSlow = stepSlow },
       },
     }),
   }

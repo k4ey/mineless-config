@@ -64,10 +64,13 @@ local function init()
 
 
 
+  local stepSlow = GensConfig.stepSlow
+  local stepQuick = GensConfig.stepQuick
   local function rotateTowards(v)
     local angle = getAngleToBlock(v)
     looker.lockYawTo(v.x, v.z,
-      math.min(math.max(playerDetails.getPitch() + math.random(-angle, angle) / 100, 15), GensConfig.pitch))
+      math.min(math.max(playerDetails.getPitch() + math.random(-angle, angle) / 100, 15), GensConfig.pitch),
+      stepSlow, stepQuick)
   end
 
 
@@ -253,6 +256,8 @@ local function gensScript(self, args)
   }
   _G.GensConfig.pitch = args.pitch or 18
   _G.GensConfig.range = args.range or 50
+  _G.GensConfig.stepQuick = args.stepQuick or 0.21
+  _G.GensConfig.stepSlow = args.stepSlow or 0.1
 
   init()
 end
