@@ -1,7 +1,7 @@
 -- predefining default values
-local enableCommands, commands, commandsInterval, commandsDelay, commandsEntropy, pitch, safeMode, farmland, crops =
+local enableCommands, commands, commandsInterval, commandsDelay, commandsEntropy, pitch, safeMode, farmland, crops, range =
     false, {}, 0, 0, 0,
-    18, false, "Farmland", {}
+    18, false, "Farmland", {}, 50
 --[[
  CONFIG EXAMPLE PLEASE COPY AND PASTE WHOLE LINES! IF YOU HAVE PROBLEMS, PLEASE INPUT THIS TEXT INTO CHATGPT AND TRY FIGURING OUT WHAT IS WRONG WITH __HIM FIRST__ (ITS GONNA BE FASTER THAN ASKING ME!!!!)
 PROMPTS FOR CHATGPT:
@@ -20,6 +20,7 @@ local crops = {
   ["Wheat Crops"] = true,
 }
 local farmland = "Farmland"
+local range = 50 -- range at which it should look for possible goals
 END OF PROMPT FOR CHATGPT
 ]]
 -- >>>>PASTE YOUR CONFIG BELOW THIS LINE (WHEN PASTING MAKE SURE TO OVERWRITE LINES BELOW THIS COMMENT)<<<<
@@ -30,7 +31,8 @@ local crops = {
   ["Wheat Crops"] = true,
 }
 local farmland = "Farmland"
-local pitch = 18 -- pitch to look at when farming
+local pitch = 18  -- pitch to look at when farming
+local range = 100 -- range at which it should look for possible goals
 
 --BUT ABOVE THIS LINE!!!
 
@@ -56,8 +58,8 @@ return {
         "afkbypass"
       },
       callbackArgs = {
-        goForward = { sprint = true, time = 230 },
-        gens = { farmland = farmland, crops = crops, pitch = pitch },
+        goForward = { sprint = true, time = -1 },
+        gens = { farmland = farmland, crops = crops, pitch = pitch, range = range },
       },
     }),
   }

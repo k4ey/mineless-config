@@ -13,6 +13,10 @@ local function goForward(self, args)
       sprint(true)
     end
   end
+  if time == -1 then
+    forward(-1)
+    return
+  end
   forward(time)
   asyncSleepClock(200)
 end

@@ -35,15 +35,15 @@ local function init()
   local function getCropScore(v)
     local farmLand = getBlockName(v:unpack())
     local crop = getBlockName((v + vec3(0, 1, 0)):unpack())
-    local headBlock = getBlockName((v + vec3(0, 2, 0)):unpack())
-    if headBlock ~= "Air" then return -999 end
+    -- local headBlock = getBlockName((v + vec3(0, 2, 0)):unpack())
     if farmLand ~= GensConfig.farmland then return -999 end
     if not GensConfig.crops[crop] then return 0 end
     return crop ~= "Air" and 1 or 0
   end
 
   local function isCrop(v)
-    return getCropScore(v) > 0
+    local score = getCropScore(v)
+    return score > 0
   end
 
   local function isFarmLand(v)
@@ -86,11 +86,13 @@ local function init()
     local function visit(v)
       if visited[v:__tostring()] then return end
       if isEdge(v) then
+        -- rb.sShow({ position = { v:unpack() }, color = "blue", opacity = 1 })
         table.insert(edges, v)
         return
       end
       visited[v:__tostring()] = v
       if actionCondition(v) then action(v) end
+      -- rb.sShow({ position = { v:unpack() }, color = "red", opacity = 1 })
       table.insert(queue, v)
     end
     visit(start)
@@ -151,7 +153,9 @@ local function init()
     return true
   end
 
-  local edges, inside = floodFill(getPlayerPosBlockVec(), function(v) return not isCrop(v) end)
+  local range = GensConfig.range or 50
+  local pPos = getPlayerPosBlockVec()
+  local edges, inside = floodFill(pPos, function(v) return not isCrop(v) or v:distance(pPos) > range end)
   local i = 0
   inside = map(inside, function(v)
     i = i + 1
@@ -165,7 +169,7 @@ local function init()
       error("", 0)
     end
 
-    return inside[math.random(1, len)]
+    return pool[math.random(1, len)]
   end
 
   local restricted = getRestrictedArea(edges)
@@ -248,6 +252,7 @@ local function gensScript(self, args)
     ["Air"] = true
   }
   _G.GensConfig.pitch = args.pitch or 18
+  _G.GensConfig.range = args.range or 50
 
   init()
 end
