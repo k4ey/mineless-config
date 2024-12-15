@@ -62,6 +62,7 @@ return {
       defaultCallbacksNames = {
         "gens",
         "goForward",
+        "goBack",
         "mine",
         "bpsCounter",
         "perfcheck",
@@ -70,6 +71,15 @@ return {
       callbackArgs = {
         goForward = { sprint = true, time = -1 },
         gens = { farmland = farmland, crops = crops, pitch = pitch, range = range, stepQuick = stepQuick, stepSlow = stepSlow, forbidRange = forbidRange },
+      },
+
+      requirements = {
+        goForward = function()
+          return getBlockName(getPlayerBlockPos()) == _G.GensConfig.farmland
+        end,
+        goBack = function()
+          return getBlockName(getPlayerBlockPos()) ~= _G.GensConfig.farmland
+        end,
       },
     }),
   }

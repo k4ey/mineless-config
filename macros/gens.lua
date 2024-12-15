@@ -46,8 +46,9 @@ local function init()
     return score > 0
   end
 
+  local vup = vec3(0, 1, 0)
   local function isFarmLand(v)
-    return getBlockName(v:unpack()) == GensConfig.farmland
+    return getBlockName(v:unpack()) == GensConfig.farmland and GensConfig.crops[getBlockName((v + vup):unpack())]
   end
 
   ---@class Probed: vec3
@@ -89,7 +90,7 @@ local function init()
     local function visit(v)
       if visited[v:__tostring()] then return end
       if isEdge(v) then
-        -- rb.sShow({ position = { v:unpack() }, color = "blue", opacity = 1 })
+        rb.sShow({ position = { v:unpack() }, color = "blue", opacity = 1 })
         table.insert(edges, v)
         return
       end
@@ -115,7 +116,7 @@ local function init()
     ---restrict blocks closer than 5 to edge
     ---@type table<string, vec3>
     local visited = {}
-    rb.sShow({ clear = true })
+    -- rb.sShow({ clear = true })
     for _, e in pairs(edges) do
       floodFill(e, function(v)
         local dist = v:distanceSquared(e)
@@ -130,6 +131,7 @@ local function init()
     local restricted = {}
     for k, v in pairs(visited) do
       restricted[k] = true
+      -- rb.sShow({ position = { v:unpack() }, color = "yellow", opacity = 1 })
     end
     return restricted
   end
@@ -214,23 +216,28 @@ local function init()
   local function normalRoutine(goalBlock)
     local ppos = getPlayerPosBlockVec()
     local initialDistance = goalBlock:distance(ppos)
-    if initialDistance < 20 then return end
+    if initialDistance < 20 then
+      log("initial distance")
+      return
+    end
     while true do
       ppos = getPlayerPosBlockVec()
       local distance = goalBlock:distance(ppos)
       if initialDistance - distance > initialDistance / 2 then
+        log("distance matched")
         break
       end
       local path = gens.getPositionsInDirection(ppos,
         getDirectionVector(goalBlock), math.floor(distance))
       if not isSafePath(path, restricted) then
+        log("unsafe, normal")
         break
       end
       color = "green"
       rotateTowards(goalBlock)
       show(path)
       coroutine.yield()
-      rb.sShow({ clear = true })
+      -- rb.sShow({ clear = true })
     end
   end
 
@@ -241,12 +248,14 @@ local function init()
     log("inside forbidden")
     while true do
       local goalBlock = randomGoalDistance(inside, 50)
+      log("goal block:", goalBlock)
       local ppos = getPlayerPosBlockVec()
       local path = gens.getPositionsInDirection(ppos,
         getDirectionVector(goalBlock), math.floor(goalBlock:distance(ppos)))
 
       local initialDistance = goalBlock:distance(ppos)
       while isSafePath(path, {}) do
+        log("is safe, in forbidden")
         ppos = getPlayerPosBlockVec()
         path = gens.getPositionsInDirection(ppos,
           getDirectionVector(goalBlock), math.floor(goalBlock:distance(ppos)))
@@ -254,11 +263,13 @@ local function init()
         show(path)
         local distance = goalBlock:distance(ppos)
         if initialDistance - distance > initialDistance / 2 then
+          log("distance matched")
           return
         end
         rotateTowards(goalBlock, 0.15, 0.21)
         rb.sShow({ clear = true })
         if not restricted[ppos:__tostring()] then
+          log("exited restricted")
           return
         end
         coroutine.yield()
@@ -271,6 +282,7 @@ local function init()
     rb.sShow({ clear = true })
     local ppos = getPlayerPosBlockVec()
     local goalBlock = randomGoalRotations(inside, 50)
+    log("goal:", { goalBlock:unpack() })
     if restricted[ppos:__tostring()] then
       forbiddenRoutine()
     else
