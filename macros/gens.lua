@@ -66,11 +66,11 @@ local function init()
 
   local stepSlow = GensConfig.stepSlow
   local stepQuick = GensConfig.stepQuick
-  local function rotateTowards(v)
+  local function rotateTowards(v, slow, quick)
     local angle = getAngleToBlock(v)
     looker.lockYawTo(v.x, v.z,
       math.min(math.max(playerDetails.getPitch() + math.random(-angle, angle) / 100, 15), GensConfig.pitch),
-      stepSlow, stepQuick)
+      slow or stepSlow, quick or stepQuick)
   end
 
 
@@ -118,7 +118,7 @@ local function init()
     for _, e in pairs(edges) do
       floodFill(e, function(v)
         local dist = v:distanceSquared(e)
-        return (not dist == 0 and not isCrop(v)) or dist > 25
+        return (not dist == 0 and not isCrop(v)) or dist > 125
       end, function(v)
         return true
       end, function(v)
@@ -164,7 +164,7 @@ local function init()
     i = i + 1
     return v, i
   end)
-  local function randomGoal(pool)
+  local function getGoals(pool, amount, mapper, sorting)
     local len = #pool
     if len == 0 then
       log(
@@ -172,14 +172,48 @@ local function init()
       error("", 0)
     end
 
-    return pool[math.random(1, len)]
+    local goals = {}
+    for i = 1, amount do
+      local goal = pool[math.random(1, len)]
+      goals[#goals + 1] = goal
+    end
+    local mapped = map(goals, function(goal) return mapper(goal) end)
+
+    -- sort based on rotation (smaller better)
+    sorting(mapped)
+    return mapped
+  end
+  ---@param pool vec3[]
+  ---@param probes number
+  local function randomGoalRotations(pool, probes)
+    local goals = getGoals(pool, probes, function(goal)
+        local rotation = getAngleToBlock(goal)
+        return { goal = goal, rotation = rotation }
+      end,
+      function(goals)
+        return table.sort(goals, function(a, b) return math.abs(a.rotation) < math.abs(b.rotation) end)
+      end)
+    return goals[1].goal
+  end
+  ---@param pool vec3[]
+  ---@param probes number
+  local function randomGoalDistance(pool, probes)
+    local ppos = getPlayerPosBlockVec()
+    local goals = getGoals(pool, probes, function(goal)
+        local distance = goal:distanceSquared(ppos)
+        return { goal = goal, distance = distance }
+      end,
+      function(goals)
+        table.sort(goals, function(a, b) return math.abs(a.distance) > math.abs(b.distance) end)
+      end)
+    return goals[math.random(1, 20)].goal
   end
 
   local restricted = getRestrictedArea(edges)
   local function normalRoutine(goalBlock)
     local ppos = getPlayerPosBlockVec()
     local initialDistance = goalBlock:distance(ppos)
-    if initialDistance < 5 then return end
+    if initialDistance < 20 then return end
     while true do
       ppos = getPlayerPosBlockVec()
       local distance = goalBlock:distance(ppos)
@@ -201,9 +235,11 @@ local function init()
 
 
 
+
   local function forbiddenRoutine()
+    log("&c inside forbidden area!")
     while true do
-      local goalBlock = randomGoal(inside)
+      local goalBlock = randomGoalDistance(inside, 50)
       local ppos = getPlayerPosBlockVec()
       local path = gens.getPositionsInDirection(ppos,
         getDirectionVector(goalBlock), math.floor(goalBlock:distance(ppos)))
@@ -214,7 +250,7 @@ local function init()
           getDirectionVector(goalBlock), math.floor(goalBlock:distance(ppos)))
         color = "green"
         show(path)
-        rotateTowards(goalBlock)
+        rotateTowards(goalBlock, 0.15, 0.21)
         rb.sShow({ clear = true })
         if not restricted[ppos:__tostring()] then
           return
@@ -228,7 +264,7 @@ local function init()
   while true do
     rb.sShow({ clear = true })
     local ppos = getPlayerPosBlockVec()
-    local goalBlock = randomGoal(inside)
+    local goalBlock = randomGoalRotations(inside, 50)
     if restricted[ppos:__tostring()] then
       forbiddenRoutine()
     else
