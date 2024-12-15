@@ -1,7 +1,7 @@
 -- predefining default values
-local enableCommands, commands, commandsInterval, commandsDelay, commandsEntropy, pitch, safeMode, farmland, crops, range, stepSlow, stepQuick =
+local enableCommands, commands, commandsInterval, commandsDelay, commandsEntropy, pitch, safeMode, farmland, crops, range, stepSlow, stepQuick, forbidRange =
     false, {}, 0, 0, 0,
-    18, false, "Farmland", {}, 50, 0.07, 0.15
+    18, false, "Farmland", {}, 50, 0.07, 0.15, 100
 --[[
  CONFIG EXAMPLE PLEASE COPY AND PASTE WHOLE LINES! IF YOU HAVE PROBLEMS, PLEASE INPUT THIS TEXT INTO CHATGPT AND TRY FIGURING OUT WHAT IS WRONG WITH __HIM FIRST__ (ITS GONNA BE FASTER THAN ASKING ME!!!!)
 PROMPTS FOR CHATGPT:
@@ -23,6 +23,7 @@ local farmland = "Farmland"
 local range = 50 -- range at which it should look for possible goals
 local stepQuick = 0.07 -- step used for interpolations on big angles (higher value more snappy)
 local stepSlow = 0.15 -- step used for interpolations on small angles (higher value more snappy)
+local forbidRange = 30 ^ 2 -- squared distance from obstackle that should be avoided at higher speeds use higher values
 END OF PROMPT FOR CHATGPT
 ]]
 -- >>>>PASTE YOUR CONFIG BELOW THIS LINE (WHEN PASTING MAKE SURE TO OVERWRITE LINES BELOW THIS COMMENT)<<<<
@@ -37,10 +38,11 @@ local crops = {
   ["Nether Wart"] = true
 }
 local farmland = "Farmland"
-local pitch = 18       -- pitch to look at when farming
-local range = 100      -- range at which it should look for possible goals
-local stepQuick = 0.07 -- step used for interpolations on big angles (higher value more snappy)
-local stepSlow = 0.21  -- step used for interpolations on small angles (higher value more snappy)
+local pitch = 18           -- pitch to look at when farming
+local range = 100          -- range at which it should look for possible goals
+local stepQuick = 0.07     -- step used for interpolations on big angles (higher value more snappy)
+local stepSlow = 0.21      -- step used for interpolations on small angles (higher value more snappy)
+local forbidRange = 10 ^ 2 -- squared distance from obstackle that should be avoided at higher speeds use higher values
 
 --BUT ABOVE THIS LINE!!!
 
@@ -67,7 +69,7 @@ return {
       },
       callbackArgs = {
         goForward = { sprint = true, time = -1 },
-        gens = { farmland = farmland, crops = crops, pitch = pitch, range = range, stepQuick = stepQuick, stepSlow = stepSlow },
+        gens = { farmland = farmland, crops = crops, pitch = pitch, range = range, stepQuick = stepQuick, stepSlow = stepSlow, forbidRange = forbidRange },
       },
     }),
   }

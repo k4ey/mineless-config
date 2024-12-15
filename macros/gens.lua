@@ -110,6 +110,7 @@ local function init()
     return edges, visited
   end
 
+  local forbiddenRange = GensConfig.forbidRange
   local function getRestrictedArea(edges)
     ---restrict blocks closer than 5 to edge
     ---@type table<string, vec3>
@@ -118,7 +119,7 @@ local function init()
     for _, e in pairs(edges) do
       floodFill(e, function(v)
         local dist = v:distanceSquared(e)
-        return (not dist == 0 and not isCrop(v)) or dist > 125
+        return (not dist == 0 and not isCrop(v)) or dist > forbiddenRange
       end, function(v)
         return true
       end, function(v)
@@ -204,7 +205,7 @@ local function init()
         return { goal = goal, distance = distance }
       end,
       function(goals)
-        table.sort(goals, function(a, b) return math.abs(a.distance) > math.abs(b.distance) end)
+        table.sort(goals, function(a, b) return math.abs(a.distance) < math.abs(b.distance) end)
       end)
     return goals[math.random(1, 20)].goal
   end
@@ -237,19 +238,24 @@ local function init()
 
 
   local function forbiddenRoutine()
-    log("&c inside forbidden area!")
+    log("inside forbidden")
     while true do
       local goalBlock = randomGoalDistance(inside, 50)
       local ppos = getPlayerPosBlockVec()
       local path = gens.getPositionsInDirection(ppos,
         getDirectionVector(goalBlock), math.floor(goalBlock:distance(ppos)))
 
+      local initialDistance = goalBlock:distance(ppos)
       while isSafePath(path, {}) do
         ppos = getPlayerPosBlockVec()
         path = gens.getPositionsInDirection(ppos,
           getDirectionVector(goalBlock), math.floor(goalBlock:distance(ppos)))
         color = "green"
         show(path)
+        local distance = goalBlock:distance(ppos)
+        if initialDistance - distance > initialDistance / 2 then
+          return
+        end
         rotateTowards(goalBlock, 0.15, 0.21)
         rb.sShow({ clear = true })
         if not restricted[ppos:__tostring()] then
@@ -294,6 +300,7 @@ local function gensScript(self, args)
   _G.GensConfig.range = args.range or 50
   _G.GensConfig.stepQuick = args.stepQuick or 0.21
   _G.GensConfig.stepSlow = args.stepSlow or 0.1
+  _G.GensConfig.forbidRange = args.forbidRange or (30 ^ 2)
 
   init()
 end
