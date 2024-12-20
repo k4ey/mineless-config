@@ -62,24 +62,33 @@ return {
       defaultCallbacksNames = {
         "gens",
         "goForward",
-        "goBack",
+        "wobble",
         "mine",
         "bpsCounter",
         "perfcheck",
-        "afkbypass"
+        "afkbypass",
+        "positionDaemon",
+        "rotationDaemon",
+        "randomTurn"
+
       },
       callbackArgs = {
         goForward = { sprint = true, time = -1 },
-        gens = { farmland = farmland, crops = crops, pitch = pitch, range = range, stepQuick = stepQuick, stepSlow = stepSlow, forbidRange = forbidRange },
+        gens = {
+          -- centerVector = { -171, 53, -5 },
+          centerVector = { -171, 89, -5 },
+        },
+        rotationDaemon = { threshold = 10 },
+        positionDaemon = { time = 1000, threshold = 2 },
+        wobble = {
+          time = 1000,
+          delay = 200,
+          entropyTime = 100,
+          entropyDelay = 100
+        }
       },
 
       requirements = {
-        goForward = function()
-          return getBlockName(getPlayerBlockPos()) == _G.GensConfig.farmland
-        end,
-        goBack = function()
-          return getBlockName(getPlayerBlockPos()) ~= _G.GensConfig.farmland
-        end,
       },
     }),
   }

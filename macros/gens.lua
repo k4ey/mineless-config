@@ -2,298 +2,263 @@ local vec3 = _G.libs.vec3
 local quat = _G.libs.quat
 local rb = _G.libs.relativeBlocks
 local looker = _G.libs.looker
-local function init()
-  local gens = MacroCreator:extensions("gens")
-  ---@return vec3
-  local function getPlayerPosBlockVec() return vec3(getPlayerBlockPos()) end
-  local function map(t, f)
-    local r = {}
-    local rval, rkey = nil, nil
-    for k, v in pairs(t) do
-      rval, rkey = f(v)
-      rkey = rkey or k
-      r[rkey] = rval
-    end
-    return r
+local function getPlayerPosBlockVec() return vec3(getPlayerBlockPos()) end
+local function map(t, f)
+  local r = {}
+  local rval, rkey = nil, nil
+  for k, v in pairs(t) do
+    rval, rkey = f(v)
+    rkey = rkey or k
+    r[rkey] = rval
   end
+  return r
+end
 
-  local color = "red"
-  local function show(...)
-    local vs = { ... }
-    if #vs == 1 then vs = vs[1] end
-    for i, v in pairs(vs) do
-      v = v + vec3(0, 1, 0)
-      rb.sShow({ position = { v:unpack() }, color = color, opacity = 1 })
-    end
-    return ...
+local color = "red"
+local function show(...)
+  local vs = { ... }
+  if #vs == 1 then vs = vs[1] end
+  for i, v in pairs(vs) do
+    v = v + vec3(0, 1, 0)
+    rb.sShow({ position = { v:unpack() }, color = color, opacity = 1, path = "default" })
   end
-  ---@type fun(x: number, y: number, z: number): string?
-  ---@diagnostic disable-next-line
-  getBlockName = getBlockName
+  return ...
+end
+---@type fun(x: number, y: number, z: number): string?
+---@diagnostic disable-next-line
+getBlockName = getBlockName
+
+
+local vup = vec3(0, 1, 0)
+local function isFarmLand(v)
+  return true
+  -- return getBlockName(v:unpack()) == GensConfig.farmland and GensConfig.crops[getBlockName((v + vup):unpack())]
+end
+local function degToRad(deg) return deg * math.pi / 180 end
+---@param starting vec3
+---@return vec3[]
+local function generateCirclePositions(starting, deltaAngle, offset)
+  ---@type table<string, vec3>
+  local set = {}
+  --- this can also generate angles from yaw to the block in one go, might be good for perf upgrade at some point
+  for i = 0, 360, deltaAngle do
+    local x = starting.x + math.cos(i) * offset
+    local z = starting.z + math.sin(i) * offset
+    local v = vec3(x, starting.y, z):ceil()
+
+    set[v:__tostring()] = v
+  end
+  local positions = {}
+  for _, v in pairs(set) do
+    positions[#positions + 1] = v
+  end
+  ---@type vec3[]
+  return positions
+end
+
+local function getDirectionVector(block)
+  local yaw = looker.getRotationTo(block)
+  local yawRad = degToRad(yaw)
+  local v = vec3(-math.sin(yawRad), 0, math.cos(yawRad))
+  return v
+end
+local function getPath(source, dest)
+  local gens = MacroCreator:extensions("gens")
+  local path = gens.getPositionsInDirection(source,
+    getDirectionVector(dest), math.floor(source:distance(dest)))
+  return path
+end
+local function getPathScore(path, allowedBlocks)
+  local score = 0
+  for _, v in pairs(path) do
+    if not isFarmLand(v) or not allowedBlocks[v:__tostring()] then
+      score = score - 3
+    end
+  end
+  return score
+end
+---@param v vec3
+---@return number
+local function getAngleToBlock(v)
+  local y1, p1 = looker.getRotationTo(v)
+  local angle1 = quat.Euler(0, 0, playerDetails.getYaw())
+  local angle2 = quat.Euler(0, 0, y1)
+  local angle = angle1:Angle(angle2)
+  return angle
+end
+local stepSlow = GensConfig.stepSlow
+local function rotateTowards(v, slow, quick)
+  local angle = getAngleToBlock(v)
+  looker.lockYawTo(v.x, v.z,
+    math.min(math.max(playerDetails.getPitch() + math.random(-angle, angle) / 100, 15), GensConfig.pitch), stepSlow,
+    stepSlow)
+end
+
+---@param circle vec3[]
+---@param allowedBlocks table<string, boolean>
+local function generateCircleOfScores(circle, allowedBlocks)
+  local ppos = getPlayerPosBlockVec()
+  local scores = {}
+  for _, v in pairs(circle) do
+    local path = getPath(ppos, v)
+    local score = getPathScore(path, allowedBlocks)
+    scores[#scores + 1] = {
+      score = score,
+      angle = getAngleToBlock(v),
+      v = v
+    }
+  end
+  ---@type table<number, {score: number, angle: number, v: vec3}>
+  return scores
+end
+
+local function floodFill(start, isEdge, action, visited)
+  ---@type table<string, vec3>
+  visited = visited or {}
+  ---@type vec3[]
+  local queue = {}
+  ---@type vec3[]
+  local edges = {}
+  action = action or function() end
 
   ---@param v vec3
-  local function getCropScore(v)
-    local farmLand = getBlockName(v:unpack())
-    local crop = getBlockName((v + vec3(0, 1, 0)):unpack())
-    -- local headBlock = getBlockName((v + vec3(0, 2, 0)):unpack())
-    if farmLand ~= GensConfig.farmland then return -999 end
-    if not GensConfig.crops[crop] then return 0 end
-    return crop ~= "Air" and 1 or 0
-  end
-
-  local function isCrop(v)
-    local score = getCropScore(v)
-    return score > 0
-  end
-
-  local vup = vec3(0, 1, 0)
-  local function isFarmLand(v)
-    return getBlockName(v:unpack()) == GensConfig.farmland and GensConfig.crops[getBlockName((v + vup):unpack())]
-  end
-
-  ---@class Probed: vec3
-  ---@field angle number
-
-
-  local function getAngleToBlock(v)
-    local y1, p1 = looker.getRotationTo(v)
-    local angle1 = quat.Euler(0, 0, playerDetails.getYaw())
-    local angle2 = quat.Euler(0, 0, y1)
-    local angle = angle1:Angle(angle2)
-    return angle
-  end
-
-
-
-  local stepSlow = GensConfig.stepSlow
-  local stepQuick = GensConfig.stepQuick
-  local function rotateTowards(v, slow, quick)
-    local angle = getAngleToBlock(v)
-    looker.lockYawTo(v.x, v.z,
-      math.min(math.max(playerDetails.getPitch() + math.random(-angle, angle) / 100, 15), GensConfig.pitch),
-      slow or stepSlow, quick or stepQuick)
-  end
-
-
-  -- FLOOD FILL FROM PLAYER TO OBTAIN BLOCKS IN RANGE, STORE EDGES IN SET
-  local function floodFill(start, isEdge, actionCondition, action, visited)
-    ---@type table<string, vec3>
-    visited = visited or {}
-    ---@type vec3[]
-    local queue = {}
-    ---@type vec3[]
-    local edges = {}
-    actionCondition = actionCondition or function() return false end
-    action = action or function() end
-
-    ---@param v vec3
-    local function visit(v)
-      if visited[v:__tostring()] then return end
-      if isEdge(v) then
-        rb.sShow({ position = { v:unpack() }, color = "blue", opacity = 1 })
-        table.insert(edges, v)
-        return
-      end
-      visited[v:__tostring()] = v
-      if actionCondition(v) then action(v) end
-      -- rb.sShow({ position = { v:unpack() }, color = "red", opacity = 1 })
-      table.insert(queue, v)
-    end
-    visit(start)
-    while #queue > 0 do
-      ---@type vec3
-      local v = table.remove(queue, 1)
-      for _, d in ipairs({ vec3(0, 0, 1), vec3(0, 0, -1), vec3(1, 0, 0), vec3(-1, 0, 0) }) do
-        local n = v + d
-        if not visited[n:__tostring()] then visit(n) end
-      end
-    end
-    return edges, visited
-  end
-
-  local forbiddenRange = GensConfig.forbidRange
-  local function getRestrictedArea(edges)
-    ---restrict blocks closer than 5 to edge
-    ---@type table<string, vec3>
-    local visited = {}
-    -- rb.sShow({ clear = true })
-    for _, e in pairs(edges) do
-      floodFill(e, function(v)
-        local dist = v:distanceSquared(e)
-        return (not dist == 0 and not isCrop(v)) or dist > forbiddenRange
-      end, function(v)
-        return true
-      end, function(v)
-      end, visited)
-    end
-
-    ---@type { string:  boolean }
-    local restricted = {}
-    for k, v in pairs(visited) do
-      restricted[k] = true
-      -- rb.sShow({ position = { v:unpack() }, color = "yellow", opacity = 1 })
-    end
-    return restricted
-  end
-
-  local function degToRad(deg) return deg * math.pi / 180 end
-
-  local function getDirectionVector(block)
-    local yaw = looker.getRotationTo(block)
-    local yawRad = degToRad(yaw)
-    local v = vec3(-math.sin(yawRad), 0, math.cos(yawRad))
-    return v
-  end
-  local function getYawDirectionVector(offset)
-    local yaw = playerDetails.getYaw()
-    local yawRad = degToRad(yaw + offset)
-    local v = vec3(-math.sin(yawRad), 0, math.cos(yawRad))
-    return v
-  end
-
-  local function isSafePath(path, restricted)
-    restricted = restricted or {}
-    for _, v in pairs(path) do
-      if not isFarmLand(v) or restricted[v:__tostring()] then return false end
-    end
-    return true
-  end
-
-  local range = GensConfig.range or 50
-  local pPos = getPlayerPosBlockVec()
-  local edges, inside = floodFill(pPos, function(v) return not isCrop(v) or v:distance(pPos) > range end)
-  local i = 0
-  inside = map(inside, function(v)
-    i = i + 1
-    return v, i
-  end)
-  local function getGoals(pool, amount, mapper, sorting)
-    local len = #pool
-    if len == 0 then
-      log(
-        "&4 NO FARMING AREA DETECTED!!!, GET INTO FARMING ZONE AND TRY LOADING IT AGAIN, IF THIS DOES NOT WORK, GO TO MINELESS-CONFIG-MAIN AND EDIT areas/gens.lua (more instructions there)")
-      error("", 0)
-    end
-
-    local goals = {}
-    for i = 1, amount do
-      local goal = pool[math.random(1, len)]
-      goals[#goals + 1] = goal
-    end
-    local mapped = map(goals, function(goal) return mapper(goal) end)
-
-    -- sort based on rotation (smaller better)
-    sorting(mapped)
-    return mapped
-  end
-  ---@param pool vec3[]
-  ---@param probes number
-  local function randomGoalRotations(pool, probes)
-    local goals = getGoals(pool, probes, function(goal)
-        local rotation = getAngleToBlock(goal)
-        return { goal = goal, rotation = rotation }
-      end,
-      function(goals)
-        return table.sort(goals, function(a, b) return math.abs(a.rotation) < math.abs(b.rotation) end)
-      end)
-    return goals[1].goal
-  end
-  ---@param pool vec3[]
-  ---@param probes number
-  local function randomGoalDistance(pool, probes)
-    local ppos = getPlayerPosBlockVec()
-    local goals = getGoals(pool, probes, function(goal)
-        local distance = goal:distanceSquared(ppos)
-        return { goal = goal, distance = distance }
-      end,
-      function(goals)
-        table.sort(goals, function(a, b) return math.abs(a.distance) < math.abs(b.distance) end)
-      end)
-    return goals[math.random(1, 20)].goal
-  end
-
-  local restricted = getRestrictedArea(edges)
-  local function normalRoutine(goalBlock)
-    local ppos = getPlayerPosBlockVec()
-    local initialDistance = goalBlock:distance(ppos)
-    if initialDistance < 20 then
-      log("initial distance")
+  local function visit(v)
+    if visited[v:__tostring()] then return end
+    if isEdge(v) then
+      -- rb.sShow({ position = { v:unpack() }, color = "blue", opacity = 1 })
+      table.insert(edges, v)
       return
     end
-    while true do
-      ppos = getPlayerPosBlockVec()
-      local distance = goalBlock:distance(ppos)
-      if initialDistance - distance > initialDistance / 2 then
-        log("distance matched")
-        break
-      end
-      local path = gens.getPositionsInDirection(ppos,
-        getDirectionVector(goalBlock), math.floor(distance))
-      if not isSafePath(path, restricted) then
-        log("unsafe, normal")
-        break
-      end
-      color = "green"
-      rotateTowards(goalBlock)
-      show(path)
-      coroutine.yield()
-      -- rb.sShow({ clear = true })
+    visited[v:__tostring()] = v
+    action(v)
+    -- rb.sShow({ position = { v:unpack() }, color = "red", opacity = 1 })
+    table.insert(queue, v)
+  end
+  visit(start)
+  while #queue > 0 do
+    ---@type vec3
+    local v = table.remove(queue, 1)
+    for _, d in ipairs({ vec3(0, 0, 1), vec3(0, 0, -1), vec3(1, 0, 0), vec3(-1, 0, 0) }) do
+      local n = v + d
+      if not visited[n:__tostring()] then visit(n) end
     end
   end
+  return edges, visited
+end
 
-
-
-
-  local function forbiddenRoutine()
-    log("inside forbidden")
-    while true do
-      local goalBlock = randomGoalDistance(inside, 50)
-      log("goal block:", goalBlock)
-      local ppos = getPlayerPosBlockVec()
-      local path = gens.getPositionsInDirection(ppos,
-        getDirectionVector(goalBlock), math.floor(goalBlock:distance(ppos)))
-
-      local initialDistance = goalBlock:distance(ppos)
-      while isSafePath(path, {}) do
-        log("is safe, in forbidden")
-        ppos = getPlayerPosBlockVec()
-        path = gens.getPositionsInDirection(ppos,
-          getDirectionVector(goalBlock), math.floor(goalBlock:distance(ppos)))
-        color = "green"
-        show(path)
-        local distance = goalBlock:distance(ppos)
-        if initialDistance - distance > initialDistance / 2 then
-          log("distance matched")
-          return
-        end
-        rotateTowards(goalBlock, 0.15, 0.21)
-        rb.sShow({ clear = true })
-        if not restricted[ppos:__tostring()] then
-          log("exited restricted")
-          return
-        end
-        coroutine.yield()
-      end
-      coroutine.yield()
-    end
-  end
-
+---@return table<string, vec3> Set
+local function recordPath()
+  local lp = getPlayerPosBlockVec()
+  local path = {}
   while true do
-    rb.sShow({ clear = true })
-    local ppos = getPlayerPosBlockVec()
-    local goalBlock = randomGoalRotations(inside, 50)
-    log("goal:", { goalBlock:unpack() })
-    if restricted[ppos:__tostring()] then
-      forbiddenRoutine()
-    else
-      normalRoutine(goalBlock)
-    end
-
     coroutine.yield()
+    local p = getPlayerPosBlockVec()
+    local pid = p:__tostring()
+    if pid ~= lp:__tostring() then
+      lp = p
+      path[pid] = p
+    end
+    if playerDetails.isSneaking() then break end
   end
+  map(path, function(v)
+    rb.sShow({ position = { v:unpack() }, color = "blue", opacity = 1 })
+  end)
+  return path
 end
 
 
+
+---@param path table<string, vec3>
+local function expandPath(path)
+  local blockMap = {}
+  local initialPath = {}
+  local removeTerrain = {}
+  log("expanding possible goals")
+  for _, edge in pairs(path) do
+    initialPath[edge:__tostring()] = edge
+    floodFill(edge, function(v)
+        local notFarmland = not isFarmLand(v)
+        if notFarmland then
+          removeTerrain[v:__tostring()] = v
+        end
+        local outOfRange = v:distanceSquared(edge) > GensConfig.range
+        return notFarmland or outOfRange
+      end,
+      ---@type vec3
+      function(v)
+        local id = v:__tostring()
+        blockMap[id] = v
+      end)
+  end
+  return blockMap, removeTerrain, initialPath
+end
+---#NOTICE: changes terrain IN PLACE
+---@param terrain table<string, vec3>
+---@return nil
+local function removeDangerous(terrain, toRemoveTerrain)
+  log("removing dangerous terrain")
+  for _, edge in pairs(toRemoveTerrain) do
+    floodFill(edge, function(v)
+        local outOfRange = v:distanceSquared(edge) > GensConfig.range
+        return outOfRange
+      end,
+      ---@type vec3
+      function(v)
+        local id = v:__tostring()
+        terrain[id] = nil
+      end)
+  end
+  return nil
+end
+_G.GensConfig = {}
+local function mainRountine(terrain)
+  local raytraceDistance = _G.GensConfig.raytraceDistance
+  local raytraceStep = _G.GensConfig.raytraceStep or 1
+  while true do
+    local ppos = getPlayerPosBlockVec()
+    local circle = generateCirclePositions(ppos, raytraceStep, raytraceDistance)
+    local scores = generateCircleOfScores(circle, terrain)
+    table.sort(scores, function(a, b) return a.score + -a.angle / 10 > b.score + -b.angle / 10 end)
+    local bestScore = scores[1]
+    local bestPath = getPath(ppos, bestScore.v)
+    rb.sShow({ clear = true })
+    show(bestPath)
+    color = "green"
+    rotateTowards(bestPath[#bestPath])
+    coroutine.yield()
+    if math.random(1, 1000) == 1 then return end
+  end
+end
+---@param v vec3
+---@param entropyX number
+---@param entropyZ number
+---in place!
+local function applyEntropy(v, entropyX, entropyZ)
+  v:setX(v.x + math.random(-entropyX, entropyX))
+  v:setZ(v.z + math.random(-entropyZ, entropyZ))
+end
+
+local function createPathCreator(centerVector, entropyX, entropyZ, entropyDistanceMin, entropyDistanceMax)
+  local center = centerVector or getPlayerPosBlockVec()
+  ---@return vec3[]
+  return function()
+    local path = generateCirclePositions(
+      center + vec3(math.random(-entropyX, entropyX), 0, math.random(-entropyZ, entropyZ)), 5,
+      math.random(entropyDistanceMin, entropyDistanceMax))
+    for _, v in pairs(path) do
+      applyEntropy(v, entropyX, entropyZ)
+    end
+    return path
+  end
+end
+local function createPath(centerVector, entropyX, entropyZ, entropyDistanceMin, entropyDistanceMax)
+  return createPathCreator(centerVector, entropyX, entropyZ, entropyDistanceMin, entropyDistanceMax)
+end
+local function createTerrain(path)
+  local blockMap, removeTerrain, initialPath = expandPath(path)
+  removeDangerous(blockMap, removeTerrain) -- in place
+  return blockMap, initialPath
+end
 
 
 local function gensScript(self, args)
@@ -303,17 +268,36 @@ local function gensScript(self, args)
   if not gens then return end
   ---@diagnostic enable
   _G.GensConfig = _G.GensConfig or {}
-  _G.GensConfig.farmland = args.farmland or "Farmland"
-  _G.GensConfig.crops = args.crops or {
+  local gc = _G.GensConfig
+  gc.entropyX = args.entropyX or 5
+  gc.entropyZ = args.entropyZ or 5
+  gc.entropyDistanceMin = args.entropyDistanceMin or 40
+  gc.entropyDistanceMax = args.entropyDistanceMax or 60
+  gc.centerVector = args.centerVector and vec3(table.unpack(args.centerVector)) or getPlayerPosBlockVec()
+
+  gc.raytraceDistance = args.raytraceDistance or 20
+  gc.raytraceStep = args.raytraceStep or 1
+  gc.range = args.range or 125
+  gc.pitch = args.pitch or 18
+  gc.crops = args.crops or {
     ["Wheat Crops"] = true,
     ["Air"] = true
   }
-  _G.GensConfig.pitch = args.pitch or 18
-  _G.GensConfig.range = args.range or 50
-  _G.GensConfig.stepQuick = args.stepQuick or 0.21
-  _G.GensConfig.stepSlow = args.stepSlow or 0.1
-  _G.GensConfig.forbidRange = args.forbidRange or (30 ^ 2)
 
-  init()
+  local generator = createPath(gc.centerVector, gc.entropyX, gc.entropyZ, gc.entropyDistanceMin,
+    gc.entropyDistanceMax)
+
+  while true do
+    local derivedPath = generator()
+    local terrain, goals = createTerrain(derivedPath)
+    local i = 1
+    rb.sShow({ clear = true, path = "area" })
+    -- map(goals, function(v)
+    --   i = i % 1 == 0 and
+    --       (rb.sShow({ position = { (v + vec3(0, 5, 0)):unpack() }, color = "green", opacity = 1, path = "area" }) or i + 1) or
+    --       i + 1
+    -- end)
+    mainRountine(terrain)
+  end
 end
 return { cb = gensScript, options = { saveState = false } }
