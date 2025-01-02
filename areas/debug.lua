@@ -12,11 +12,6 @@ return {
       toggling = true,
       color = "green",
       defaultCallbacksNames = {
-        "rayTraceTurning",
-        "goForward",
-        "mine",
-        "bpsCounter",
-        "perfcheck"
 
       },
       callbackArgs = {

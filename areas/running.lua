@@ -57,7 +57,7 @@ return {
         "mine",
         "goRight",
         "betterLook",
-        "expandMine",
+        -- "expandMine",
         "afkbypass", -- if you have this enabled, you **cannot** use upgrader!!!! it will stop whenever any gui is opened
         enableCommands and "sayCommands" or nil,
       },
