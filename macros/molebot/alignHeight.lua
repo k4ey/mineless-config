@@ -55,11 +55,15 @@ end
 local function goBlockVertically(self, args)
   local areaManager = MacroCreator.api.getAreaManager()
   local radius = args and args.radius or 3
+  local delay = args and args.delay
   local areaId = tostring(self.areaId)
   local area = areaManager:getAreaById(areaId)
   assert(area, "area is not specified????")
   while true do
     if areBlocksInRadiusAir(-radius, radius, area.area) then
+      if delay then
+        asyncSleepClock(delay)
+      end
       -- we are using mine daemon to allow mining offscreen, look mine.lua in MACROS/macros
       _G.MOLEBOT_G.canAttack = false
       sneak(25)

@@ -1,6 +1,6 @@
 -- predefining default values
-local enableCommands, commands, commandsInterval, commandsDelay, commandsEntropy, lookTime, timeEntropy, lookDelay, delayEntropy, safeMode =
-    false, {}, 10000, 10, 100, 400, 50, 50, 10, true
+local enableCommands, commands, commandsInterval, commandsDelay, commandsEntropy, lookTime, timeEntropy, lookDelay, delayEntropy, safeMode, alignHeightDelay =
+    false, {}, 10000, 10, 100, 400, 50, 50, 10, true, 10
 --[[
  CONFIG EXAMPLE PLEASE COPY AND PASTE WHOLE LINES! IF YOU HAVE PROBLEMS, PLEASE INPUT THIS TEXT INTO CHATGPT AND TRY FIGURING OUT WHAT IS WRONG WITH __HIM FIRST__ (ITS GONNA BE FASTER THAN ASKING ME!!!!)
 PROMPTS FOR CHATGPT:
@@ -12,6 +12,7 @@ local commands = { "/command one", "/command two" } -- HAS TO START WITH "/" to 
 local commandsInterval = 200000 -- interval in ms (time between repeating commands)
 local commandsDelay = 500 -- delay between each command in ms (wait time between consequitive commands)
 local commandsEntropy = 100 -- random time to add  to interval (in ms)
+local alignHeightDelay = 1000 -- delay between going down when a layer is cleared
 
 local safeMode = true -- true OR false TO ENABLE SAFE MODE (stops when any GUI is opened)
 END OF PROMPT FOR CHATGPT
@@ -23,6 +24,7 @@ local commands = { "/mine reset" } -- HAS TO START WITH "/" to be a command, ena
 local commandsInterval = 200000    -- interval in ms (time between repeating commands)
 local commandsDelay = 500          -- delay between each command in ms (wait time between consequitive commands)
 local commandsEntropy = 100        -- random time to add to interval (in ms)
+local alignHeightDelay = 10        -- delay between going down when a layer is cleared
 
 local safeMode = true              -- true OR false TO ENABLE SAFE MODE (stops when any GUI is opened)
 
@@ -45,6 +47,7 @@ return {
       callbackArgs = {
         alignHeight = {
           radius = 30,
+          delay = alignHeightDelay
         },
       },
     }),
@@ -253,19 +256,19 @@ return {
     aligner = { x = true, z = true, y = true },
     insider = { x = true, z = true, y = true },
 
-    lookdowner = { x = true, z = true, y = true, w = true, h = true, d = true },
-    timeouter = { x = true, z = true, y = true, w = true, h = true, d = true },
+    lookdowner = { x = true, z = true, y = true, w = true, d = true },
+    timeouter = { x = true, z = true, y = true, w = true, d = true },
 
-    southTurner = { y = true, h = true, w = false, x = true, d = true },
-    northTurner = { x = true, z = true, y = true, h = true, d = true },
+    southTurner = { y = true, w = false, x = true, d = true },
+    northTurner = { x = true, z = true, y = true, d = true },
 
-    eastTurner = { y = true, h = true, z = true, w = true },
-    westTurner = { y = true, h = true, z = true, x = true, w = true },
+    eastTurner = { y = true, z = true, w = true },
+    westTurner = { y = true, z = true, x = true, w = true },
 
-    northEastTurner = { y = true, h = true, z = true, w = true, d = true },
-    northWestTurner = { y = true, h = true, z = true, x = true, w = true, d = true },
+    northEastTurner = { y = true, z = true, w = true, d = true },
+    northWestTurner = { y = true, z = true, x = true, w = true, d = true },
 
-    southEastTurner = { y = true, h = true, z = false, w = true, d = true },
-    southWestTurner = { y = true, h = true, x = true, z = false, w = true, d = true },
+    southEastTurner = { y = true, z = false, w = true, d = true },
+    southWestTurner = { y = true, x = true, z = false, w = true, d = true },
   }
 }
