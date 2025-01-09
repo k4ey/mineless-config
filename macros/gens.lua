@@ -3,6 +3,7 @@ local quat = _G.libs.quat
 local rb = _G.libs.relativeBlocks
 local looker = _G.libs.looker
 local function getPlayerPosBlockVec() return vec3(getPlayerBlockPos()) end
+_G.GensConfig = {}
 local function map(t, f)
   local r = {}
   local rval, rkey = nil, nil
@@ -210,7 +211,6 @@ local function removeDangerous(terrain, toRemoveTerrain)
   end
   return nil
 end
-_G.GensConfig = {}
 local function mainRountine(terrain)
   local raytraceDistance = _G.GensConfig.raytraceDistance
   local raytraceStep = _G.GensConfig.raytraceStep or 1
