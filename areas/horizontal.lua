@@ -21,7 +21,7 @@ END OF PROMPT FOR CHATGPT
 -- >>>>PASTE YOUR CONFIG BELOW THIS LINE (WHEN PASTING MAKE SURE TO OVERWRITE LINES BELOW THIS COMMENT)<<<<
 local enableCommands = true        -- true OR false TO ENABLE
 local commands = { "/mine reset" } -- HAS TO START WITH "/" to be a command, enableCommands must be true for this to take effect (ITS A TABLE OF STRINGS)
-local commandsInterval = 200000    -- interval in ms (time between repeating commands)
+local commandsInterval = 30000     -- interval in ms (time between repeating commands)
 local commandsDelay = 500          -- delay between each command in ms (wait time between consequitive commands)
 local commandsEntropy = 100        -- random time to add to interval (in ms)
 local alignHeightDelay = 10        -- delay between going down when a layer is cleared

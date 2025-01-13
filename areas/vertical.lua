@@ -1,6 +1,6 @@
 -- predefining default values
-local enableCommands, commands, commandsInterval, commandsDelay, commandsEntropy, lookTime, timeEntropy, lookDelay, delayEntropy, safeMode =
-    false, {}, 10000, 10, 100, 400, 50, 50, 10, true
+local enableCommands, commands, commandsInterval, commandsDelay, commandsEntropy, lookTime, timeEntropy, lookDelay, delayEntropy, safeMode, borderHeight =
+    false, {}, 10000, 10, 100, 400, 50, 50, 10, true, 1
 
 --[[
  CONFIG EXAMPLE PLEASE COPY AND PASTE WHOLE LINES! IF YOU HAVE PROBLEMS, PLEASE INPUT THIS TEXT INTO CHATGPT AND TRY FIGURING OUT WHAT IS WRONG WITH __HIM FIRST__ (ITS GONNA BE FASTER THAN ASKING ME!!!!)
@@ -18,6 +18,8 @@ local lookTime = 400 -- ms how long it takes to change the direction
 local timeEntropy = 50 -- random ms range added to lookTime
 local lookDelay = 50  -- ms after which it starts turning after hitting a wall
 local delayEntropy = 10 -- random ms added to lookDelay
+
+local borderHeight = 1 -- how many blocks to leave between the bottom and the top of the mine (set to allow for the player to move between specific Y levels)
 
 local safeMode = true -- true OR false TO ENABLE SAFE MODE (stops when any GUI is opened)
 END OF PROMPT FOR CHATGPT
@@ -164,7 +166,7 @@ return {
       defaultCallbacksNames = forwarderCallbacks,
       callbackArgs = forwarderArgsDown,
     }),
-    AreaMacro.new({ 1000, 109, 1000 }, { 1010, 109, 1010 }, {
+    AreaMacro.new({ 1000, 109, 1000 }, { 1010, 109 - borderHeight, 1010 }, {
       id = "switcherDown",
       defaultCallbacksNames = {
         "areaEditor",
@@ -182,7 +184,7 @@ return {
       color = "black",
       type = "once",
     }),
-    AreaMacro.new({ 1000, 101, 1000 }, { 1010, 102, 1010 }, {
+    AreaMacro.new({ 1000, 101, 1000 }, { 1010, 102 + borderHeight, 1010 }, {
       id = "switcherUp",
       defaultCallbacksNames = {
         "areaEditor",
