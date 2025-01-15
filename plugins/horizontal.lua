@@ -14,7 +14,7 @@ else
   MacroCreator.api.loadResizableArea("horizontal.lua", nil, nil)
 end
 local size = MacroCreator.api.getEditManager().mineSize
-if size <= minSize then
+if size < minSize then
   toast("&c&B[MINELESS]", "Your mine is to small!")
   log("&cRequired size: &B" ..
     minSize .. " blocks for Horizontal.lua &cYou got &a&B" .. size .. ". &c Falling back to &Bvertical.lua &f")

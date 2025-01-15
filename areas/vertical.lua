@@ -144,7 +144,7 @@ return {
     southEast = { x = true, z = false, w = false, d = true, y = true },
   },
   areas = {
-    AreaMacro.new({ 1000, 111, 1000 }, { 1010, 130, 1010 }, {
+    AreaMacro.new({ 1000, 112, 1000 }, { 1010, 130, 1010 }, {
       id = "downer",
       color = "white",
       defaultCallbacksNames = {
@@ -156,7 +156,7 @@ return {
       id = "jumper",
       color = "cyan",
       defaultCallbacksNames = {
-        -- "getInHole",
+        "getInHole",
       },
       callbackArgs = {},
     }),
