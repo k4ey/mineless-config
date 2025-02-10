@@ -10,6 +10,7 @@ local function loggingScript()
   ---@diagnostic enable
   _G.LogsConfig = {
     range = 15,
+    expandedRange = 45,
     wages = {
       ["Wood"] = 1,
     },
@@ -18,6 +19,7 @@ local function loggingScript()
     inRangeDistance = 5,
     yRange = 4,
     rotationSpeed = 0.1,
+    blackListRange = 256
   }
   ---@type fun(blockVector: vec3, playerVector: vec3): number
   local getScore = logging.getScore
