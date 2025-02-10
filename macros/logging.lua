@@ -19,7 +19,9 @@ local function loggingScript()
     inRangeDistance = 5,
     yRange = 4,
     rotationSpeed = 0.1,
-    blackListRange = 256
+    blackListRange = 256,
+    blackListSize = 10,
+    blackListAfter = 10
   }
   ---@type fun(blockVector: vec3, playerVector: vec3): number
   local getScore = logging.getScore
