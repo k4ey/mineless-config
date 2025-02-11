@@ -13,8 +13,9 @@ local function daemon(_, args)
     asyncSleepClock(delay)
     local nx, ny, nz = getPlayerPos()
     local delta = math.abs(nx - x) + math.abs(nz - z) + math.abs(ny - y)
-    if delta < threshold then
-      logger.emerg("WATCHDOG: Player did not move far enough, stopping")
+    if delta > threshold then
+      asyncSleepClock(args.timeout or 100)
+      logger.emerg("WATCHDOG: Player got tped out! stopping")
       MacroCreator.toggled = false
       break
     end

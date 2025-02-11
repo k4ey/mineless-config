@@ -14,10 +14,10 @@ local function loggingScript()
     wages = {
       ["Wood"] = 1,
     },
-    rotationWage = 0.01,
-    distanceWage = 1,
+    rotationWage = 0.1,
+    distanceWage = 0.9,
     inRangeDistance = 5,
-    yRange = 4,
+    yRange = 0,
     rotationSpeed = 0.1,
     blackListRange = 256,
     blackListSize = 10,
@@ -27,12 +27,20 @@ local function loggingScript()
   local getScore = logging.getScore
 
   runThread(function()
+    local history = { vector = nil, time = nil }
     while true do
       if not MacroCreator.toggled then
         return
       end
       if LogsConfig.best then
-        libs.looker.lookTowards(LogsConfig.best.pos + _G.libs.vec3(0.5, 0.5, 0.5), LogsConfig.rotationSpeed, 1)
+        local dest = LogsConfig.best.pos + _G.libs.vec3(0.5, 0.5, 0.5)
+        if not history.vector or (history.vector - dest):setY(0):length() > 0 then
+          history.vector = dest
+          history.time = os.clock()
+        end
+        local time = os.clock() - history.time
+        local delta = 0.01 + 0.5 * time ^ 1.2
+        libs.looker.lookTowards(dest, math.min(delta, 0.3), 0.1)
       end
       sleep(10)
     end
