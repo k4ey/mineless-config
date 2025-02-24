@@ -10,6 +10,7 @@ local function loggingScript()
   ---@diagnostic enable
   _G.LogsConfig = {
     range = 15,
+    quickScan = false,
     expandedRange = 45,
     wages = {
       ["Wood"] = 1,
