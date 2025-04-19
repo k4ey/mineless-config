@@ -7,7 +7,7 @@
 
 local minSize = 29
 local ip = getWorld().ip
-if ip == "play.oplegends.net" then
+if ip and ip:find("oplegends") then
   local x, y, z = getPlayerBlockPos()
   MacroCreator.api.loadResizableArea("horizontal.lua", { x, y - 10, z }, nil)
 else
